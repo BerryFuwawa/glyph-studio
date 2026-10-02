@@ -1,0 +1,70 @@
+name: 持续集成
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    name: 单元测试（${{ matrix.os }}）
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+    steps:
+      - name: 检出源码
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: 设置 Node.js 24
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 运行单元测试
+        run: npm test
+
+  windows-portable:
+    name: Windows 便携版构建产物
+    # Pull request 仅运行上面的测试矩阵；推送时再执行 Electron 打包冒烟检查。
+    if: github.event_name != 'pull_request'
+    needs: unit-tests
+    runs-on: windows-latest
+    steps:
+      - name: 检出源码
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: 设置 Node.js 24
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 预热 Electron 二进制文件
+        run: npm run prebuild
+
+      - name: 构建 Windows 便携版可执行文件
+        run: npm run build
+
+      - name: 上传 Windows 便携版构建产物
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: glyph-studio-windows-portable
+          path: dist/*.exe
+          if-no-files-found: error
+          retention-days: 14

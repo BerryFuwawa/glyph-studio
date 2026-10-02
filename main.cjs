@@ -1,0 +1,122 @@
+const { app, BrowserWindow, ipcMain, dialog, clipboard, nativeImage, Menu, protocol, net } = require('electron');
+const fs = require('node:fs/promises');
+const path = require('node:path');
+const { pathToFileURL } = require('node:url');
+
+protocol.registerSchemesAsPrivileged([{ scheme: 'glyph', privileges: { standard: true, secure: true, supportFetchAPI: true } }]);
+app.setName('Glyph Studio');
+const qaMode = process.argv.includes('--qa');
+const desktopQA = process.argv.includes('--desktop-qa');
+if (qaMode || desktopQA) app.setPath('userData', path.join(__dirname, 'qa-results', 'profile'));
+let window;
+const allowedAssets = new Set(['index.html', 'styles.css', 'app.js', 'core.js', 'export.js', 'image-info.js', 'worker.js', 'assets/sculpture.png', 'assets/icon.png']);
+const types = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.bmp': 'image/bmp', '.gif': 'image/gif', '.avif': 'image/avif' };
+
+function assertSender(event) {
+  if (!window || event.sender !== window.webContents || event.senderFrame?.url !== 'glyph://app/index.html') throw new Error('无效的应用请求。');
+}
+
+async function readImage(filePath) {
+  const mime = types[path.extname(filePath).toLowerCase()];
+  if (!mime) throw new Error('请选择 PNG、JPG、WebP、BMP、GIF 或 AVIF 图片。');
+  const stat = await fs.stat(filePath);
+  if (!stat.isFile() || stat.size > 50 * 1024 * 1024) throw new Error('图片不能超过 50 MB。');
+  const bytes = await fs.readFile(filePath);
+  return { name: path.basename(filePath), dataURL: `data:${mime};base64,${bytes.toString('base64')}`, size: bytes.length };
+}
+
+app.whenReady().then(async () => {
+  app.setAppUserModelId('studio.glyph.desktop');
+  protocol.handle('glyph', request => {
+    const url = new URL(request.url);
+    const asset = decodeURIComponent(url.pathname).replace(/^\//, '');
+    if (url.host !== 'app' || !allowedAssets.has(asset)) return new Response('Not found', { status: 404 });
+    return net.fetch(pathToFileURL(path.join(__dirname, asset)).toString());
+  });
+  Menu.setApplicationMenu(null);
+  window = new BrowserWindow({
+    title: '字相 · Glyph Studio', width: 1400, height: 920, minWidth: 980, minHeight: 700,
+    backgroundColor: '#101214', frame: false, show: false, icon: path.join(__dirname, 'assets', 'icon.png'),
+    webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, spellcheck: false, devTools: !app.isPackaged }
+  });
+  window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  window.webContents.on('will-navigate', event => event.preventDefault());
+  window.webContents.session.setPermissionRequestHandler((_webContents, _permission, callback) => callback(false));
+  window.webContents.session.webRequest.onBeforeRequest({ urls: ['http://*/*', 'https://*/*', 'ws://*/*', 'wss://*/*'] }, (_details, callback) => callback({ cancel: true }));
+  window.once('ready-to-show', () => { if (!qaMode) window.show(); });
+  window.on('maximize', () => window.webContents.send('window-state', true));
+  window.on('unmaximize', () => window.webContents.send('window-state', false));
+  ipcMain.handle('open-image', async event => {
+    assertSender(event);
+    const selected = await dialog.showOpenDialog(window, { title: '打开图片', properties: ['openFile'], filters: [{ name: '图片', extensions: ['png', 'jpg', 'jpeg', 'webp', 'bmp', 'gif', 'avif'] }] });
+    return selected.canceled ? null : readImage(selected.filePaths[0]);
+  });
+  ipcMain.handle('paste-image', event => {
+    assertSender(event);
+    const image = clipboard.readImage();
+    const dimensions = image.getSize();
+    if (dimensions.width * dimensions.height > 40000000) throw new Error('剪贴板图片过大，请先缩小到 4000 万像素以内。');
+    return image.isEmpty() ? null : { name: '剪贴板图片.png', dataURL: image.toDataURL(), size: image.toPNG().length };
+  });
+  ipcMain.handle('copy-text', (event, text) => {
+    assertSender(event);
+    if (typeof text !== 'string' || text.length > 2000000) throw new Error('文本超出可复制范围。');
+    clipboard.writeText(text);
+    return true;
+  });
+  ipcMain.handle('copy-image', (event, dataURL) => {
+    assertSender(event);
+    if (typeof dataURL !== 'string' || !dataURL.startsWith('data:image/png;base64,') || dataURL.length > 80000000) throw new Error('图片超出可复制范围。');
+    const image = nativeImage.createFromDataURL(dataURL);
+    if (image.isEmpty()) throw new Error('图片复制失败。');
+    clipboard.writeImage(image);
+    return true;
+  });
+  ipcMain.handle('save-output', async (event, { format, name, content }) => {
+    assertSender(event);
+    const formats = { txt: '纯文本', png: 'PNG 图片', svg: 'SVG 矢量图', html: 'HTML 字符画', ansi: 'ANSI 彩色文本' };
+    if (!formats[format] || typeof content !== 'string' || content.length > 100000000) throw new Error('无效的导出内容。');
+    const safeName = String(name || '字符画').replace(/[<>:"/\\|?*\x00-\x1f]/g, '-').slice(0, 100);
+    const selected = await dialog.showSaveDialog(window, { title: `导出${formats[format]}`, defaultPath: `${safeName}.${format}`, filters: [{ name: formats[format], extensions: [format] }], properties: ['showOverwriteConfirmation', 'createDirectory'] });
+    if (selected.canceled || !selected.filePath) return null;
+    let target = selected.filePath;
+    if (path.extname(target).toLowerCase() !== `.${format}`) {
+      target += `.${format}`;
+      const exists = await fs.access(target).then(() => true, () => false);
+      if (exists) {
+        const choice = await dialog.showMessageBox(window, { type: 'warning', title: '替换文件', message: `${path.basename(target)} 已存在，是否替换？`, buttons: ['取消', '替换'], defaultId: 0, cancelId: 0 });
+        if (choice.response !== 1) return null;
+      }
+    }
+    const bytes = format === 'png' ? Buffer.from(content.replace(/^data:image\/png;base64,/, ''), 'base64') : Buffer.from(content, 'utf8');
+    await fs.writeFile(target, bytes);
+    return { name: path.basename(target) };
+  });
+  ipcMain.on('window-control', (event, action) => {
+    assertSender(event);
+    if (action === 'minimize') window.minimize();
+    if (action === 'maximize') window.isMaximized() ? window.unmaximize() : window.maximize();
+    if (action === 'close') window.close();
+  });
+  await window.loadURL('glyph://app/index.html');
+  if (qaMode) {
+    await fs.mkdir(path.join(__dirname, 'qa-results'), { recursive: true });
+    window.webContents.on('console-message', (_event, details) => {
+      if (details.level === 'error') fs.appendFile(path.join(__dirname, 'qa-results', 'console.log'), `${details.message}\n`).catch(() => {});
+    });
+    try {
+      const result = await window.webContents.executeJavaScript('window.GlyphStudio.runSmokeTests()');
+      await fs.writeFile(path.join(__dirname, 'qa-results', 'smoke.json'), JSON.stringify(result, null, 2));
+      window.setSize(1400, 920);
+      await window.webContents.executeJavaScript('window.GlyphStudio.setView("compare")');
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const capture = await window.webContents.capturePage();
+      await fs.writeFile(path.join(__dirname, 'qa-results', 'desktop.png'), capture.toPNG());
+      app.exit(result.failed.length ? 1 : 0);
+    } catch (error) {
+      await fs.writeFile(path.join(__dirname, 'qa-results', 'error.log'), String(error.stack));
+      app.exit(1);
+    }
+  }
+});
+app.on('window-all-closed', () => app.quit());

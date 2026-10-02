@@ -1,0 +1,63 @@
+const { _electron } = require('playwright-core');
+const path = require('node:path');
+const fs = require('node:fs/promises');
+const assert = require('node:assert/strict');
+(async () => {
+  const folder = path.join(__dirname, 'qa-results', 'native-exports', String(Date.now()));
+  await fs.mkdir(folder, { recursive: true });
+  const launched = await _electron.launch({ executablePath: path.join(__dirname, 'node_modules', 'electron', 'dist', 'electron.exe'), args: [__dirname, '--desktop-qa'], cwd: __dirname });
+  const passed = [];
+  const errors = [];
+  try {
+    const page = await launched.firstWindow();
+    page.on('pageerror', error => errors.push(error.message));
+    await page.waitForFunction(() => window.GlyphStudio?.getState().result && !document.getElementById('copy-btn').disabled);
+    const report = await page.evaluate(() => window.GlyphStudio.runSmokeTests());
+    assert.deepEqual(report.failed, []);
+    passed.push(...report.passed);
+    await launched.evaluate(({ dialog }, imagePath) => { dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [imagePath] }); }, path.join(__dirname, 'assets', 'sculpture.png'));
+    await page.click('#open-btn');
+    await page.waitForFunction(() => window.GlyphStudio.getState().source.name === 'sculpture.png' && !document.getElementById('copy-btn').disabled);
+    passed.push('native open IPC reads and decodes selected image');
+    for (const format of ['txt', 'png', 'svg', 'html', 'ansi']) {
+      const filename = path.join(folder, `test-${format}.${format}`);
+      await launched.evaluate(({ dialog }, outputPath) => { dialog.showSaveDialog = async () => ({ canceled: false, filePath: outputPath }); }, filename);
+      await page.click('#export-btn');
+      await page.locator(`input[name=export-format][value=${format}]`).check({ force: true });
+      await page.click('#save-btn');
+      await page.waitForFunction(() => !document.getElementById('export-dialog').open);
+      const buffer = await fs.readFile(filename);
+      assert.ok(buffer.length > 100);
+      if (format === 'png') assert.equal(buffer.subarray(1, 4).toString(), 'PNG');
+      if (format === 'svg') assert.ok(buffer.toString('utf8').startsWith('<svg'));
+      if (format === 'html') assert.ok(buffer.toString('utf8').startsWith('<!doctype html>'));
+      if (format === 'txt') assert.ok(!buffer.includes(27));
+      if (format === 'ansi') assert.ok(buffer.includes(27));
+      passed.push(`native ${format} save writes correct file content`);
+    }
+    const wrongExtension = path.join(folder, 'extension-check.txt');
+    await launched.evaluate(({ dialog }, outputPath) => { dialog.showSaveDialog = async () => ({ canceled: false, filePath: outputPath }); }, wrongExtension);
+    await page.click('#export-btn');
+    await page.locator('input[name=export-format][value=svg]').check({ force: true });
+    await page.click('#save-btn');
+    await page.waitForFunction(() => !document.getElementById('export-dialog').open);
+    assert.ok((await fs.readFile(`${wrongExtension}.svg`, 'utf8')).startsWith('<svg'));
+    passed.push('mismatching filename extension preserves actual export format');
+    await page.click('#help-btn');
+    assert.equal(await page.locator('#help-dialog').evaluate(dialog => dialog.open), true);
+    await page.screenshot({ path: path.join(__dirname, 'qa-results', 'help.png') });
+    await page.click('#help-done');
+    await page.click('#view-result');
+    assert.equal(await page.locator('#stage').getAttribute('data-view'), 'result');
+    await page.click('#zoom-label');
+    assert.equal(await page.locator('#stage').getAttribute('data-zoom'), 'manual');
+    await page.keyboard.press('Control+0');
+    assert.equal(await page.locator('#stage').getAttribute('data-zoom'), 'fit');
+    await page.click('#view-compare');
+    passed.push('help, tabs, zoom and keyboard shortcut are operable');
+    await page.screenshot({ path: path.join(__dirname, 'qa-results', 'desktop-final.png') });
+    assert.deepEqual(errors, []);
+    await fs.writeFile(path.join(__dirname, 'qa-results', 'native-smoke.json'), JSON.stringify({ passed, errors }, null, 2));
+    console.log(JSON.stringify({ passed: passed.length, errors }, null, 2));
+  } finally { await launched.close(); }
+})().catch(error => { console.error(error); process.exitCode = 1; });

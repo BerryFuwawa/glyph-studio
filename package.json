@@ -1,0 +1,72 @@
+{
+  "name": "glyph-studio",
+  "productName": "Glyph Studio",
+  "version": "1.0.0",
+  "description": "字相 — 离线图像转字符画工作台",
+  "main": "main.cjs",
+  "author": "BerryFuwawa",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test core.test.cjs app.test.cjs image-info.test.cjs",
+    "prebuild": "node -e \"require('electron')\"",
+    "build": "electron-builder --win portable --x64"
+  },
+  "devDependencies": {
+    "electron": "44.5.1",
+    "electron-builder": "26.15.3",
+    "playwright-core": "1.63.0"
+  },
+  "build": {
+    "appId": "studio.glyph.desktop",
+    "productName": "Glyph Studio",
+    "asar": true,
+    "electronDist": "node_modules/electron/dist",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "index.html",
+      "styles.css",
+      "app.js",
+      "core.js",
+      "export.js",
+      "image-info.js",
+      "worker.js",
+      "assets/**",
+      "LICENSE",
+      "README.md",
+      "REFERENCES.md",
+      "THIRD_PARTY_NOTICES.md"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "Glyph-Studio-${version}-Windows-${arch}.${ext}",
+      "icon": "assets/icon.ico",
+      "signExecutable": false
+    },
+    "portable": {
+      "requestExecutionLevel": "user"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BerryFuwawa/glyph-studio.git"
+  },
+  "homepage": "https://github.com/BerryFuwawa/glyph-studio#readme",
+  "bugs": {
+    "url": "https://github.com/BerryFuwawa/glyph-studio/issues"
+  }
+}

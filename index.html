@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; worker-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>字相 · Glyph Studio</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <svg class="svg-defs" aria-hidden="true"><defs>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m3 16 6-5 4 4 4-3 4 5"/></symbol>
+    <symbol id="i-open" viewBox="0 0 24 24"><path d="M3 19V6a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v2M3 19l3-8h16l-3 8H3Z"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V4H4v12h4"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-fit" viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m8 0h5v-5"/><rect x="8" y="8" width="8" height="8" rx="1"/></symbol>
+    <symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 10a9 9 0 1 1 1 7M3 4v6h6"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.2 9a3 3 0 0 1 5.7 1.1c0 1.9-2.9 2.1-2.9 4M12 17v.1"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m8 5 7 7-7 7"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+    <symbol id="i-expand" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="m8 4-5 5 5 5M3 9h10a7 7 0 0 1 0 14"/></symbol>
+    <symbol id="i-redo" viewBox="0 0 24 24"><path d="m16 4 5 5-5 5m5-5H11a7 7 0 0 0 0 14"/></symbol>
+    <symbol id="i-paste" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M8 5H4v16h16V5h-4M8 11h8M8 15h6"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h7m4 0h5M4 17h3m4 0h9"/><circle cx="13" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
+  </defs></svg>
+
+  <div class="titlebar">
+    <div class="titlebar-name"><span class="mini-mark">[ : ]</span> Glyph Studio</div>
+    <div class="titlebar-center">图像 / 字符 / 想象</div>
+    <div class="window-controls">
+      <button id="minimize" class="window-button" aria-label="最小化"><svg class="icon"><use href="#i-minus"/></svg></button>
+      <button id="maximize" class="window-button" aria-label="最大化或还原"><svg class="icon"><use href="#i-expand"/></svg></button>
+      <button id="close-window" class="window-button window-close" aria-label="关闭窗口"><svg class="icon"><use href="#i-close"/></svg></button>
+    </div>
+  </div>
+
+  <header class="app-header">
+    <div class="brand"><div class="brand-mark" aria-hidden="true">[<span>:</span>]</div><div><h1>字相<span class="brand-en">GLYPH STUDIO</span></h1><p>让图像，成为字符。</p></div></div>
+    <div class="header-actions">
+      <span class="privacy"><svg class="icon"><use href="#i-lock"/></svg>本机处理</span>
+      <button id="help-btn" class="icon-button" title="使用帮助 · F1" aria-label="使用帮助"><svg class="icon"><use href="#i-help"/></svg></button>
+      <span class="header-divider"></span>
+      <button id="open-btn" class="button secondary"><svg class="icon"><use href="#i-open"/></svg>打开图片<kbd>Ctrl O</kbd></button>
+      <button id="export-btn" class="button primary"><svg class="icon"><use href="#i-download"/></svg>导出作品</button>
+    </div>
+  </header>
+
+  <main class="studio">
+    <aside class="controls" aria-label="转换参数">
+      <div class="sidebar-title"><span>创作面板</span><span class="eyebrow">01 / CONTROL</span></div>
+      <section class="source-section">
+        <button id="source-card" class="source-card" title="更换图片">
+          <img id="source-thumb" alt="当前导入图片的缩略图" src="assets/sculpture.png">
+          <span class="source-details"><strong id="source-name">石膏像 · 内置示例</strong><span id="source-dimensions">读取图片中</span><span class="replace-link">更换图片 <svg class="icon"><use href="#i-open"/></svg></span></span>
+        </button>
+        <div class="source-tools"><span>拖入图片，也可以</span><button id="paste-btn" class="text-button" title="从剪贴板粘贴图片 · Ctrl V">粘贴图片</button></div>
+      </section>
+
+      <section class="control-section">
+        <div class="section-heading"><h2>字符风格</h2><span class="help-label" id="style-label">10 级明暗</span></div>
+        <div class="style-grid" role="group" aria-label="字符风格">
+          <button class="style-card active" data-mode="ascii" aria-pressed="true"><span class="style-art">@#%</span><strong>经典 ASCII</strong><span>字符的明暗层次</span></button>
+          <button class="style-card" data-mode="braille" aria-pressed="false"><span class="style-art braille-art">⠿⣷⣿</span><strong>盲文点阵</strong><span>更细腻的细节</span></button>
+          <button class="style-card" data-mode="edges" aria-pressed="false"><span class="style-art">/|\</span><strong>轮廓线稿</strong><span>只留下轮廓</span></button>
+          <button class="style-card" data-mode="blocks" aria-pressed="false"><span class="style-art">░▒▓</span><strong>像素方块</strong><span>复古的颗粒感</span></button>
+        </div>
+      </section>
+
+      <section class="control-section">
+        <div class="section-heading"><h2>画面细节</h2><button id="reset-btn" class="text-button" title="重置全部参数">重置</button></div>
+        <div class="range-control"><div class="range-label"><label for="columns">字符宽度</label><span><output id="columns-out">120</output> 列</span></div><input type="range" id="columns" min="40" max="280" step="4" value="120"><div class="range-hints"><span>简洁</span><span>细腻</span></div></div>
+        <div class="range-control"><div class="range-label"><label for="brightness">亮度</label><output id="brightness-out">0</output></div><input type="range" id="brightness" min="-80" max="80" step="1" value="0"></div>
+        <div class="range-control"><div class="range-label"><label for="contrast">对比度</label><output id="contrast-out">1.00</output></div><input type="range" id="contrast" min="0.5" max="2.5" step="0.05" value="1"></div>
+      </section>
+
+      <section class="control-section color-section">
+        <div class="section-heading"><h2>输出色彩</h2></div>
+        <div class="segmented color-mode" role="group" aria-label="输出色彩"><button data-color="mono" class="active" aria-pressed="true">单色</button><button data-color="original" aria-pressed="false">原图色</button></div>
+        <div id="palette-row" class="palette-row" role="group" aria-label="单色配色">
+          <button class="palette-swatch active" data-palette="ivory" aria-label="象牙白配色" aria-pressed="true" title="象牙白"><span class="swatch ivory"></span></button>
+          <button class="palette-swatch" data-palette="amber" aria-label="琥珀配色" aria-pressed="false" title="琥珀"><span class="swatch amber"></span></button>
+          <button class="palette-swatch" data-palette="green" aria-label="终端绿配色" aria-pressed="false" title="终端绿"><span class="swatch green"></span></button>
+          <button class="palette-swatch" data-palette="blue" aria-label="冰蓝配色" aria-pressed="false" title="冰蓝"><span class="swatch blue"></span></button>
+          <button class="palette-swatch" data-palette="paper" aria-label="白纸黑字配色" aria-pressed="false" title="白纸黑字"><span class="swatch paper"></span></button>
+          <span id="palette-name">象牙白</span>
+        </div>
+      </section>
+
+      <details id="advanced" class="control-section advanced-section">
+        <summary><span><svg class="icon"><use href="#i-sliders"/></svg>进阶调节</span><svg class="icon disclosure-icon"><use href="#i-chevron"/></svg></summary>
+        <div class="advanced-content">
+          <label class="switch-row" for="auto-contrast"><span>自动增强对比度</span><input id="auto-contrast" type="checkbox" checked><span class="switch-track" aria-hidden="true"></span></label>
+          <label class="switch-row" for="dither"><span>抖动补偿<span class="field-hint">让明暗过渡更丰富</span></span><input id="dither" type="checkbox"><span class="switch-track" aria-hidden="true"></span></label>
+          <label class="switch-row" for="invert"><span>反转明暗</span><input id="invert" type="checkbox"><span class="switch-track" aria-hidden="true"></span></label>
+          <div class="range-control"><div class="range-label"><label for="gamma">中间调（Gamma）</label><output id="gamma-out">1.00</output></div><input type="range" id="gamma" min="0.4" max="2.4" step="0.05" value="1"></div>
+          <div id="threshold-control" class="range-control" hidden><div class="range-label"><label for="threshold">点阵阈值</label><output id="threshold-out">0.50</output></div><input type="range" id="threshold" min="0.1" max="0.9" step="0.02" value="0.5"></div>
+          <div id="ramp-control"><label for="ramp">自定义字符序列</label><input id="ramp" type="text" value=" .:-=+*#%@" maxlength="96" spellcheck="false" autocomplete="off"><span class="field-hint">从稀疏到密集，空格也算一个字符</span><p id="ramp-error" class="field-error" role="alert" hidden></p></div>
+        </div>
+      </details>
+      <div class="sidebar-footer"><button id="demo-btn" class="text-button"><svg class="icon"><use href="#i-image"/></svg>恢复示例图片</button><span>离线 · 无需账号</span></div>
+    </aside>
+
+    <section class="workspace" aria-label="图像预览工作台">
+      <div class="workspace-toolbar">
+        <div class="workspace-title"><h2>预览工作台</h2><span id="result-size" class="mono-meta">120 × 60</span></div>
+        <div class="segmented view-tabs" role="tablist" aria-label="预览模式"><button id="view-compare" role="tab" data-view="compare" aria-selected="true" class="active">对照</button><button id="view-result" role="tab" data-view="result" aria-selected="false">字符</button><button id="view-source" role="tab" data-view="source" aria-selected="false">原图</button></div>
+        <div class="history-actions"><button id="undo-btn" class="icon-button" aria-label="撤销参数调整" title="撤销 · Ctrl Z" disabled><svg class="icon"><use href="#i-undo"/></svg></button><button id="redo-btn" class="icon-button" aria-label="重做参数调整" title="重做 · Ctrl Y" disabled><svg class="icon"><use href="#i-redo"/></svg></button></div>
+      </div>
+
+      <div id="stage" class="stage" data-view="compare" data-zoom="fit" tabindex="0" aria-label="可缩放的图像预览区域">
+        <div id="art-layout" class="art-layout">
+          <article id="source-panel" class="art-panel source-panel"><div class="panel-caption"><span><span class="panel-index">A</span>原始图像</span><span class="eyebrow">SOURCE</span></div><div class="art-body"><img id="original-image" alt="当前转换的原始图片" src="assets/sculpture.png"></div></article>
+          <article id="result-panel" class="art-panel result-panel"><div class="panel-caption"><span><span class="panel-index">B</span>字符结果</span><span id="result-mode-label" class="eyebrow">ASCII</span></div><div id="result-body" class="art-body"><canvas id="art-canvas" aria-label="生成的字符画预览"></canvas></div></article>
+        </div>
+        <div id="processing" class="processing"><span class="spinner"></span><span id="processing-label">正在准备画布…</span></div>
+        <div id="drop-overlay" class="drop-overlay" hidden><div><svg class="icon"><use href="#i-image"/></svg><strong>松手，开始创作</strong><span>PNG / JPG / WebP / BMP / GIF / AVIF</span></div></div>
+      </div>
+
+      <div class="canvas-toolbar">
+        <div class="zoom-controls"><button id="zoom-fit" class="icon-button active" title="适应窗口 · Ctrl 0" aria-label="适应窗口"><svg class="icon"><use href="#i-fit"/></svg></button><span class="toolbar-divider"></span><button id="zoom-out" class="icon-button" aria-label="缩小预览" title="缩小"><svg class="icon"><use href="#i-minus"/></svg></button><button id="zoom-label" class="zoom-label" title="切换 100% 视图">适应</button><button id="zoom-in" class="icon-button" aria-label="放大预览" title="放大"><svg class="icon"><use href="#i-plus"/></svg></button></div>
+        <span class="preview-hint">拖入图片 · 滚轮缩放 · 空格查看原图</span>
+        <button id="copy-btn" class="button compact"><svg class="icon"><use href="#i-copy"/></svg>复制字符<kbd>Ctrl C</kbd></button>
+      </div>
+
+      <div class="output-strip"><div><span class="eyebrow">CHARACTER PREVIEW</span><span id="character-strip" class="character-strip"> .:-=+*#%@</span></div><span id="render-stats">准备中</span></div>
+    </section>
+  </main>
+
+  <footer class="statusbar"><div><span class="status-indicator"></span><span id="status-text">正在加载示例图片</span></div><div><span id="status-font">等宽字符 / UTF-8</span><span class="status-divider">|</span><span>GLYPH STUDIO 1.0</span></div></footer>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <dialog id="export-dialog" class="modal export-modal">
+    <div class="modal-header"><div><span class="eyebrow">SAVE YOUR WORK</span><h2>导出作品</h2></div><button class="icon-button modal-close" aria-label="关闭导出窗口"><svg class="icon"><use href="#i-close"/></svg></button></div>
+    <div class="export-summary"><img id="export-thumb" alt="作品缩略图"><div><strong id="export-title">石膏像 · 字符画</strong><span id="export-dimensions">120 列 × 60 行</span></div></div>
+    <fieldset class="export-options"><legend>选择格式</legend>
+      <label class="export-option selected"><input type="radio" name="export-format" value="txt" checked><span class="format-badge">TXT</span><span><strong>纯文本</strong><span>可编辑的字符字符串 · UTF-8</span></span><svg class="icon"><use href="#i-check"/></svg></label>
+      <label class="export-option"><input type="radio" name="export-format" value="png"><span class="format-badge">PNG</span><span><strong>高清图片</strong><span>保留当前配色，方便分享</span></span><svg class="icon"><use href="#i-check"/></svg></label>
+      <label class="export-option"><input type="radio" name="export-format" value="svg"><span class="format-badge">SVG</span><span><strong>矢量字符画</strong><span>缩放清晰，保留文字和颜色</span></span><svg class="icon"><use href="#i-check"/></svg></label>
+      <label class="export-option"><input type="radio" name="export-format" value="html"><span class="format-badge">HTML</span><span><strong>网页字符画</strong><span>独立文件，浏览器打开即看</span></span><svg class="icon"><use href="#i-check"/></svg></label>
+      <label class="export-option"><input type="radio" name="export-format" value="ansi"><span class="format-badge">ANSI</span><span><strong>终端彩色文本</strong><span>适用于支持真彩色的终端</span></span><svg class="icon"><use href="#i-check"/></svg></label>
+    </fieldset>
+    <p id="export-note" class="export-note">纯文本保存字符和换行，不包含颜色。请用等宽字体查看。</p>
+    <div class="modal-footer"><button id="copy-image-btn" class="button secondary"><svg class="icon"><use href="#i-copy"/></svg>复制图片</button><button id="save-btn" class="button primary"><svg class="icon"><use href="#i-download"/></svg>保存文件</button></div>
+  </dialog>
+
+  <dialog id="help-dialog" class="modal help-modal">
+    <div class="modal-header"><div><span class="eyebrow">A LITTLE GUIDE</span><h2>把一张图，变成一段文字。</h2></div><button class="icon-button modal-close" aria-label="关闭帮助窗口"><svg class="icon"><use href="#i-close"/></svg></button></div>
+    <div class="help-steps"><p><b>01</b><span><strong>放入一张图片</strong>拖到窗口、点击「打开图片」，或从剪贴板粘贴。</span></p><p><b>02</b><span><strong>找到喜欢的画风</strong>调节字符宽度、明暗与配色，结果会实时更新。</span></p><p><b>03</b><span><strong>带走你的作品</strong>复制字符，或导出文本、图片、SVG、HTML 和 ANSI。</span></p></div>
+    <div class="shortcut-grid"><span>打开图片<kbd>Ctrl O</kbd></span><span>粘贴图片<kbd>Ctrl V</kbd></span><span>复制字符<kbd>Ctrl C</kbd></span><span>导出作品<kbd>Ctrl S</kbd></span><span>撤销 / 重做<kbd>Ctrl Z / Y</kbd></span><span>适应窗口<kbd>Ctrl 0</kbd></span><span>临时查看原图<kbd>按住空格</kbd></span><span>帮助<kbd>F1</kbd></span></div>
+    <div class="help-note"><svg class="icon"><use href="#i-lock"/></svg><p>所有图片都在本机处理，无需联网。动图仅转换第一帧；单次处理一张图片。字符画适合用等宽字体查看，盲文点阵需要支持 Unicode 的字体。</p></div>
+    <details class="reference-details"><summary>开源参考与实现说明</summary><p>参考 ascii-image-converter 的点阵与导出体验、aalib.js 的处理流水线，以及 Chafa 的字体比例与抖动思路。转换核心为独立实现，未复制这些项目的代码。</p><p class="reference-url">github.com/TheZoraiz/ascii-image-converter<br>github.com/mir3z/aalib.js<br>github.com/hpjansson/chafa</p></details>
+    <div class="modal-footer"><span class="version-note">字相 · Glyph Studio 1.0.0</span><button id="help-done" class="button primary">开始创作</button></div>
+  </dialog>
+  <input id="file-input" type="file" accept="image/png,image/jpeg,image/webp,image/bmp,image/gif,image/avif" hidden>
+  <script src="core.js"></script>
+  <script src="export.js"></script>
+  <script src="image-info.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
