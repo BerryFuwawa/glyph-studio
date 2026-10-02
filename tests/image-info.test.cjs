@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const GlyphImageInfo = require('./image-info.js');
+const GlyphImageInfo = require('../src/image-info.js');
 
 function u32be(value) {
   return [(value >>> 24) & 255, (value >>> 16) & 255, (value >>> 8) & 255, value & 255];

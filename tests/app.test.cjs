@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { formatSVG, formatHTML, formatANSI, getPalette } = require('./export.js');
+const { formatSVG, formatHTML, formatANSI, getPalette } = require('../src/export.js');
 const sample = { columns: 5, rows: 1, text: '<&"\'>', characters: ['<', '&', '"', "'", '>'], colors: new Uint8ClampedArray([255, 0, 0, 0, 255, 0, 0, 0, 255, 255, 255, 255, 100, 100, 100]) };
 const metric = { width: 100, height: 60, cellWidth: 8, lineHeight: 16, fontSize: 14, padding: 16 };
 test('HTML and SVG escape custom glyphs and filename markup', () => {

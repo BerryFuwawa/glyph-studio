@@ -12,9 +12,9 @@ Windows 便携版包含 Electron 及 Chromium 等运行时组件。解包后的�
 
 ## 内置素材
 
-`assets/icon.png`、`assets/icon.ico` 为本项目原创图标，生成脚本为 `make-icon.py`。
+`src/assets/icon.png`、`src/assets/icon.ico` 为本项目原创图标，生成脚本为 `scripts/make-icon.py`；从仓库根目录运行 `python scripts/make-icon.py` 会写入 `src/assets/`。
 
-`assets/sculpture.png` 是 AI 生成的示例图片，生成提示词见 README。它用于演示转换效果，不是真实摄影作品，也不代表特定人物。本项目将该素材随源码一并开放使用。
+`src/assets/sculpture.png` 是 AI 生成的示例图片，生成提示词见 README。它用于演示转换效果，不是真实摄影作品，也不代表特定人物。本项目将该素材随源码一并开放使用。
 
 ## 算法参考
 

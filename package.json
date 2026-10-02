@@ -3,7 +3,7 @@
   "productName": "Glyph Studio",
   "version": "1.0.0",
   "description": "字相 — 离线图像转字符画工作台",
-  "main": "main.cjs",
+  "main": "src/main.cjs",
   "author": "BerryFuwawa",
   "license": "MIT",
   "engines": {
@@ -11,7 +11,7 @@
   },
   "scripts": {
     "start": "electron .",
-    "test": "node --test core.test.cjs app.test.cjs image-info.test.cjs",
+    "test": "node --test tests/*.test.cjs",
     "prebuild": "node -e \"require('electron')\"",
     "build": "electron-builder --win portable --x64"
   },
@@ -29,20 +29,11 @@
       "output": "dist"
     },
     "files": [
-      "main.cjs",
-      "preload.cjs",
-      "index.html",
-      "styles.css",
-      "app.js",
-      "core.js",
-      "export.js",
-      "image-info.js",
-      "worker.js",
-      "assets/**",
+      "src/**",
       "LICENSE",
       "README.md",
-      "REFERENCES.md",
-      "THIRD_PARTY_NOTICES.md"
+      "docs/REFERENCES.md",
+      "docs/THIRD_PARTY_NOTICES.md"
     ],
     "win": {
       "target": [
@@ -54,7 +45,7 @@
         }
       ],
       "artifactName": "Glyph-Studio-${version}-Windows-${arch}.${ext}",
-      "icon": "assets/icon.ico",
+      "icon": "src/assets/icon.ico",
       "signExecutable": false
     },
     "portable": {

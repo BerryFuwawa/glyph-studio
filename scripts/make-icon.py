@@ -1,8 +1,9 @@
 from pathlib import Path
 from PIL import Image, ImageDraw
 
-folder = Path(__file__).parent / 'assets'
-folder.mkdir(exist_ok=True)
+project_root = Path(__file__).resolve().parents[1]
+folder = project_root / 'src' / 'assets'
+folder.mkdir(parents=True, exist_ok=True)
 image = Image.new('RGBA', (256, 256), (18, 22, 26, 255))
 draw = ImageDraw.Draw(image)
 draw.rounded_rectangle((4, 4, 251, 251), radius=54, fill=(23, 28, 32), outline=(122, 95, 56), width=3)

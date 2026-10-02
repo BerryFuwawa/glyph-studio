@@ -1,6 +1,6 @@
 # 贡献指南
 
-感谢你改进 Glyph Studio。提交修改前，请先阅读[架构说明](docs/architecture.md)和[安全政策](SECURITY.md)，了解离线运行、IPC 边界和当前版本限制。
+感谢你改进 Glyph Studio。提交修改前，请先阅读[架构说明](../docs/architecture.md)和[安全政策](SECURITY.md)，了解离线运行、IPC 边界和当前版本限制。
 
 ## 开始开发
 
@@ -25,18 +25,18 @@ npx electron . --qa
 涉及文件对话框、剪贴板、导出或窗口行为时，再运行：
 
 ```powershell
-node qa-desktop.cjs
+node scripts/qa-desktop.cjs
 ```
 
-涉及界面布局时运行 `node qa-browser.cjs`；脚本默认查找本机 Chrome，也接受 `CHROME_PATH` 绝对路径。所有检查产生的 `qa-results/` 文件不应提交。
+涉及界面布局时运行 `node scripts/qa-browser.cjs`；脚本默认查找本机 Chrome，也接受 `CHROME_PATH` 绝对路径。所有检查产生的 `qa-results/` 文件不应提交。
 
 ## 代码和文档约定
 
 - 转换核心保持无依赖，并继续支持 ASCII、Braille、轮廓和方块四种模式。
 - 新的导出器必须转义字符、标题和颜色输入，并为有效内容和恶意/非法内容补测试。
-- 新增桌面能力时只通过 `preload.cjs` 暴露最小接口，并在主进程验证 IPC 发送方、类型和大小。
+- 新增桌面能力时只通过 `src/preload.cjs` 暴露最小接口，并在主进程验证 IPC 发送方、类型和大小。
 - 不加入账号、遥测、远程字体、CDN、自动上传或未说明的网络请求。
-- 用户可见行为、输入限制、快捷键或导出变化要同步更新 README、相关 `docs/` 页面和 `CHANGELOG.md`。
+- 用户可见行为、输入限制、快捷键或导出变化要同步更新 README、相关 `docs/` 页面和 `docs/CHANGELOG.md`。
 - 保持中文界面文案清楚、错误提示可操作；避免改变已有快捷键而不写迁移说明。
 
 ## 提交内容

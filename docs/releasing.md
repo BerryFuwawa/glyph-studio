@@ -20,11 +20,11 @@
    ```powershell
    npm test
    npx electron . --qa
-   node qa-desktop.cjs
-   node qa-browser.cjs
+   node scripts/qa-desktop.cjs
+   node scripts/qa-browser.cjs
    ```
 
-   有解包目录时，再运行 `node qa-packaged.cjs`。`qa-browser.cjs` 自动寻找 Chrome；必要时设置 `CHROME_PATH`。
+   有解包目录时，再运行 `node scripts/qa-packaged.cjs`。`scripts/qa-browser.cjs` 自动寻找 Chrome；必要时设置 `CHROME_PATH`。
 
 5. 执行 `npm run build`，检查 `dist/` 中唯一的 Windows x64 portable exe，启动最终文件并验证四种模式、五种导出、剪贴板和离线行为。
 6. 本地生成哈希并保存核对值：
@@ -40,7 +40,7 @@
 提交版本文件后，在默认分支 `main` 上创建带注释的版本标签并推送：
 
 ```powershell
-git add package.json package-lock.json docs/release-1.0.0.md CHANGELOG.md
+git add package.json package-lock.json docs/release-1.0.0.md docs/CHANGELOG.md
 git commit -m "发布 1.0.0"
 git tag -a v1.0.0 -m "发布 Glyph Studio 1.0.0"
 git push origin main

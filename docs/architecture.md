@@ -1,17 +1,17 @@
 # 架构说明
 
-Glyph Studio 是一个只包含本地资源的 Electron 桌面应用。主进程负责窗口和原生能力，渲染器负责界面与预览，转换核心在 Web Worker 中运行。
+Glyph Studio 是一个只包含本地资源的 Electron 桌面应用，应用文件集中在 `src/`。主进程负责窗口和原生能力，渲染器负责界面与预览，转换核心在 Web Worker 中运行。
 
 ```mermaid
 flowchart LR
   A[图片文件 / 剪贴板 / 内置示例] --> B[主进程与 preload]
-  B --> C[渲染器 app.js]
-  C --> D[image-info.js 尺寸检查]
+  B --> C[渲染器 src/app.js]
+  C --> D[src/image-info.js 尺寸检查]
   D --> E[解码与最长边 1600px 采样]
-  E --> F[worker.js]
-  F --> G[core.js 转换核心]
+  E --> F[src/worker.js]
+  F --> G[src/core.js 转换核心]
   G --> H[Canvas 预览]
-  G --> I[export.js TXT/SVG/HTML/ANSI]
+  G --> I[src/export.js TXT/SVG/HTML/ANSI]
   H --> J[PNG / 剪贴板]
   I --> K[主进程原生保存对话框]
 ```
@@ -20,26 +20,27 @@ flowchart LR
 
 | 文件 | 职责 |
 | --- | --- |
-| `main.cjs` | 创建窗口、注册 `glyph://` 本地协议、打开/保存文件、读写剪贴板、处理窗口控制 IPC |
-| `preload.cjs` | 以最小白名单把打开、粘贴、复制、保存和窗口操作暴露给渲染器 |
-| `index.html` / `styles.css` | 界面结构、控件、响应式布局和对话框 |
-| `app.js` | 参数状态、历史、导入、预览、快捷键、Worker 调度和导出编排 |
-| `image-info.js` | 在图像解码前读取 PNG、GIF、JPEG、BMP、WebP、AVIF 尺寸，降低超大图像带来的风险 |
-| `worker.js` | 接收像素和参数，在后台调用转换核心并回传结果 |
-| `core.js` | 无依赖的亮度映射、面积采样、Gamma/对比度、抖动、Braille 点位和 Sobel 方向边缘算法 |
-| `export.js` | 配色、HTML/SVG 转义和 SVG、HTML、ANSI 格式化 |
+| `src/main.cjs` | 创建窗口、注册 `glyph://` 本地协议、打开/保存文件、读写剪贴板、处理窗口控制 IPC |
+| `src/preload.cjs` | 以最小白名单把打开、粘贴、复制、保存和窗口操作暴露给渲染器 |
+| `src/index.html` / `src/styles.css` | 界面结构、控件、响应式布局和对话框 |
+| `src/app.js` | 参数状态、历史、导入、预览、快捷键、Worker 调度和导出编排 |
+| `src/image-info.js` | 在图像解码前读取 PNG、GIF、JPEG、BMP、WebP、AVIF 尺寸，降低超大图像带来的风险 |
+| `src/worker.js` | 接收像素和参数，在后台调用转换核心并回传结果 |
+| `src/core.js` | 无依赖的亮度映射、面积采样、Gamma/对比度、抖动、Braille 点位和 Sobel 方向边缘算法 |
+| `src/export.js` | 配色、HTML/SVG 转义和 SVG、HTML、ANSI 格式化 |
+| `src/assets/` | 内置图标和示例图片 |
 
 ## 转换流程
 
 1. 主进程通过原生文件对话框读取允许的图片格式，或从剪贴板读取图片；渲染器也接受拖放文件。
-2. `image-info.js` 检查可识别的尺寸。文件大小上限是 50 MB，原图最多 4,000 万像素，任一边不超过 20,000 像素。
+2. `src/image-info.js` 检查可识别的尺寸。文件大小上限是 50 MB，原图最多 4,000 万像素，任一边不超过 20,000 像素。
 3. 浏览器解码图片并绘制到本地 Canvas；最长边超过 1,600 像素时先缩小。动图的当前实现使用第一帧。
-4. `app.js` 把像素和参数发送给 Worker。`core.js` 进行 Rec.709 加权、透明度背景合成、面积采样、明暗校正和对应模式的字符映射。
+4. `src/app.js` 把像素和参数发送给 Worker。`src/core.js` 进行 Rec.709 加权、透明度背景合成、面积采样、明暗校正和对应模式的字符映射。
 5. 输出网格限制为最多 600 行、180,000 个字符格；极端比例会自动降低实际列数。结果返回到渲染器后绘制 Canvas，并传给导出格式化器。
 
 ## IPC 和本地资源
 
-主进程只向 `glyph://app/` 白名单资源提供 `index.html`、脚本、样式和内置素材。渲染器不直接访问 Node.js API；文件打开、剪贴板和保存均通过 `preload.cjs` 暴露的窄接口完成。IPC 处理器会验证请求来自当前窗口和指定本地页面，并限制输入格式、大小和导出内容长度。
+主进程只向 `glyph://app/` 白名单资源提供 `src/index.html`、脚本、样式和 `src/assets/` 内置素材。渲染器不直接访问 Node.js API；文件打开、剪贴板和保存均通过 `src/preload.cjs` 暴露的窄接口完成。IPC 处理器会验证请求来自当前窗口和指定本地页面，并限制输入格式、大小和导出内容长度。
 
 导出路径由用户在原生保存对话框中选择，应用不会自行扫描或上传目录。转换参数使用浏览器本地存储；图片像素和结果对象只在当前进程内存中流转。
 

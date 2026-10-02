@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const AsciiCore = require('./core.js');
+const AsciiCore = require('../src/core.js');
 
 function image(width, height, pixels) {
   const data = new Uint8ClampedArray(width * height * 4);

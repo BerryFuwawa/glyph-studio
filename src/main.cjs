@@ -2,12 +2,13 @@ const { app, BrowserWindow, ipcMain, dialog, clipboard, nativeImage, Menu, proto
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
+const qaDirectory = path.join(app.getAppPath(), 'qa-results');
 
 protocol.registerSchemesAsPrivileged([{ scheme: 'glyph', privileges: { standard: true, secure: true, supportFetchAPI: true } }]);
 app.setName('Glyph Studio');
 const qaMode = process.argv.includes('--qa');
 const desktopQA = process.argv.includes('--desktop-qa');
-if (qaMode || desktopQA) app.setPath('userData', path.join(__dirname, 'qa-results', 'profile'));
+if (qaMode || desktopQA) app.setPath('userData', path.join(qaDirectory, 'profile'));
 let window;
 const allowedAssets = new Set(['index.html', 'styles.css', 'app.js', 'core.js', 'export.js', 'image-info.js', 'worker.js', 'assets/sculpture.png', 'assets/icon.png']);
 const types = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.bmp': 'image/bmp', '.gif': 'image/gif', '.avif': 'image/avif' };
@@ -100,21 +101,21 @@ app.whenReady().then(async () => {
   });
   await window.loadURL('glyph://app/index.html');
   if (qaMode) {
-    await fs.mkdir(path.join(__dirname, 'qa-results'), { recursive: true });
+    await fs.mkdir(qaDirectory, { recursive: true });
     window.webContents.on('console-message', (_event, details) => {
-      if (details.level === 'error') fs.appendFile(path.join(__dirname, 'qa-results', 'console.log'), `${details.message}\n`).catch(() => {});
+      if (details.level === 'error') fs.appendFile(path.join(qaDirectory, 'console.log'), `${details.message}\n`).catch(() => {});
     });
     try {
       const result = await window.webContents.executeJavaScript('window.GlyphStudio.runSmokeTests()');
-      await fs.writeFile(path.join(__dirname, 'qa-results', 'smoke.json'), JSON.stringify(result, null, 2));
+      await fs.writeFile(path.join(qaDirectory, 'smoke.json'), JSON.stringify(result, null, 2));
       window.setSize(1400, 920);
       await window.webContents.executeJavaScript('window.GlyphStudio.setView("compare")');
       await new Promise(resolve => setTimeout(resolve, 300));
       const capture = await window.webContents.capturePage();
-      await fs.writeFile(path.join(__dirname, 'qa-results', 'desktop.png'), capture.toPNG());
+      await fs.writeFile(path.join(qaDirectory, 'desktop.png'), capture.toPNG());
       app.exit(result.failed.length ? 1 : 0);
     } catch (error) {
-      await fs.writeFile(path.join(__dirname, 'qa-results', 'error.log'), String(error.stack));
+      await fs.writeFile(path.join(qaDirectory, 'error.log'), String(error.stack));
       app.exit(1);
     }
   }

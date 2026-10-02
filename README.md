@@ -16,7 +16,7 @@
 
 从 [GitHub Releases 下载最新版](https://github.com/BerryFuwawa/glyph-studio/releases/latest)，选择 `.exe` 文件即可运行；同页面提供 `.sha256` 校验文件。
 
-当前版本的构建文件名为 `Glyph-Studio-1.0.0-Windows-x64.exe`。源码仓库是 [BerryFuwawa/glyph-studio](https://github.com/BerryFuwawa/glyph-studio)，如果维护者已上传构建文件，可从 [Releases](https://github.com/BerryFuwawa/glyph-studio/releases) 获取；请以页面实际状态为准。从可信来源取得文件后，将它放到有写入权限的文件夹并双击运行。便携版不需要安装 Node.js、Python 或其他运行时，也不要求管理员权限；首次启动可能需要几秒钟解压内置运行时到临时目录。
+当前版本的构建文件名为 `Glyph-Studio-1.0.0-Windows-x64.exe`。下载后将它放到有写入权限的文件夹并双击运行。便携版不需要安装 Node.js、Python 或其他运行时，也不要求管理员权限；首次启动可能需要几秒钟解压内置运行时到临时目录。
 
 这是未签名的 Windows 便携程序，Windows Defender SmartScreen 可能显示发布者未知。先确认文件来源和文件哈希（如果维护者同时提供哈希），再在你信任该文件时选择“更多信息”→“仍要运行”。不要为了启动程序而全局关闭 Defender、SmartScreen 或其他系统安全策略；组织策略阻止执行时，请联系管理员或从源码构建。
 
@@ -85,13 +85,24 @@ npm run build
 ```powershell
 npm test
 npx electron . --qa
-node qa-desktop.cjs
-node qa-browser.cjs
+node scripts/qa-desktop.cjs
+node scripts/qa-browser.cjs
 ```
 
-`qa-browser.cjs` 使用本机 Chrome；若自动发现失败，可在 PowerShell 中设置 `CHROME_PATH` 后再运行。验证结果和截图写入被忽略的 `qa-results/` 目录。`npm run build` 生成 Windows x64 portable 目标；当前版本产物为 `dist/Glyph-Studio-1.0.0-Windows-x64.exe`。需要验证解包后的应用时，先确保存在 `dist/win-unpacked/Glyph Studio.exe`，再运行 `node qa-packaged.cjs`。
+`scripts/qa-browser.cjs` 使用本机 Chrome；若自动发现失败，可在 PowerShell 中设置 `CHROME_PATH` 后再运行。验证结果和截图写入被忽略的 `qa-results/` 目录。`npm run build` 生成 Windows x64 portable 目标；当前版本产物为 `dist/Glyph-Studio-1.0.0-Windows-x64.exe`。需要验证解包后的应用时，先确保存在 `dist/win-unpacked/Glyph Studio.exe`，再运行 `node scripts/qa-packaged.cjs`。
 
 代码结构、测试分层和安全边界见[架构说明](docs/architecture.md)与[开发指南](docs/development.md)。
+
+## 仓库布局
+
+```text
+src/                  Electron 应用源码、转换核心和内置素材（src/assets/）
+tests/                Node.js 单元测试
+scripts/              QA 检查与图标生成脚本
+docs/                 用户、架构、发布和许可文档
+.github/              工作流、贡献指南和安全政策
+package.json          依赖与构建配置
+```
 
 ## 文档
 
@@ -100,12 +111,12 @@ node qa-browser.cjs
 - [开发指南](docs/development.md)：安装、测试、调试和打包。
 - [常见问题](docs/faq.md)：字体、限制、SmartScreen 和离线行为。
 - [发布流程](docs/releasing.md)：维护者可选的检查与 GitHub CLI 流程。
-- [贡献指南](CONTRIBUTING.md)
-- [安全政策](SECURITY.md)
-- [更新日志](CHANGELOG.md)
+- [贡献指南](.github/CONTRIBUTING.md)
+- [安全政策](.github/SECURITY.md)
+- [更新日志](docs/CHANGELOG.md)
 
 ## 开源与素材
 
-源码采用 MIT 许可证，见 [LICENSE](LICENSE)。开源项目只用于算法和交互思路参考，转换与界面代码为独立实现，详见 [REFERENCES.md](REFERENCES.md)。Electron 及其依赖附带各自的许可声明。
+源码采用 MIT 许可证，见 [LICENSE](LICENSE)。开源项目只用于算法和交互思路参考，转换与界面代码为独立实现，详见 [REFERENCES.md](docs/REFERENCES.md)。Electron 及其依赖附带各自的许可声明。
 
-内置示例 `assets/sculpture.png` 由内置 imagegen 工具生成。生成提示词：白色大理石古典雕塑胸像，略向左转的脸、卷发、象牙色左上方光源与细微琥珀边缘光，近黑背景，清晰轮廓与平滑明暗过渡，无文字、无标志、无界面。第三方许可、运行时许可证和素材说明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+内置示例 `src/assets/sculpture.png` 由内置 imagegen 工具生成。生成提示词：白色大理石古典雕塑胸像，略向左转的脸、卷发、象牙色左上方光源与细微琥珀边缘光，近黑背景，清晰轮廓与平滑明暗过渡，无文字、无标志、无界面。第三方许可、运行时许可证和素材说明见 [THIRD_PARTY_NOTICES.md](docs/THIRD_PARTY_NOTICES.md)。
