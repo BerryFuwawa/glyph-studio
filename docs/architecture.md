@@ -48,7 +48,8 @@ flowchart LR
 
 - BrowserWindow 开启 `sandbox` 和 `contextIsolation`，关闭 `nodeIntegration`。
 - 禁止新窗口和页面导航；权限请求统一拒绝。
-- 普通 HTTP、HTTPS、WebSocket 请求在会话层取消，应用资源通过受限的本地协议提供。
+- 主窗口会话的普通 HTTP、HTTPS、WebSocket 请求在会话层取消，应用资源通过受限的本地协议提供；帮助中的“检查更新”是用户主动触发的联网例外，只向 `api.github.com` 读取版本元数据。
+- 版本检查不发送图片或账号信息，不在应用启动时运行，也不自动下载或安装更新；发现新版本后由用户点击“前往下载”在默认浏览器打开官方 GitHub Release 页面。
 - HTML 导出会转义字符和标题，并使用 `default-src 'none'` 的内容安全策略；导出文件仍应按普通用户文件管理。
 - 便携版构建未签名，Windows 可能提示 SmartScreen。文档不会建议全局关闭系统安全功能；使用者应核对来源或哈希后再决定是否运行。
 

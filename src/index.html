@@ -138,7 +138,7 @@
     </section>
   </main>
 
-  <footer class="statusbar"><div><span class="status-indicator"></span><span id="status-text">正在加载示例图片</span></div><div><span id="status-font">等宽字符 / UTF-8</span><span class="status-divider">|</span><span>GLYPH STUDIO 1.1</span></div></footer>
+  <footer class="statusbar"><div><span class="status-indicator"></span><span id="status-text">正在加载示例图片</span></div><div><span id="status-font">等宽字符 / UTF-8</span><span class="status-divider">|</span><span id="app-version">GLYPH STUDIO 1.1.1</span></div></footer>
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
   <dialog id="export-dialog" class="modal export-modal">
@@ -159,9 +159,15 @@
     <div class="modal-header"><div><span class="eyebrow">A LITTLE GUIDE</span><h2>把一张图，变成一段文字。</h2></div><button class="icon-button modal-close" aria-label="关闭帮助窗口"><svg class="icon"><use href="#i-close"/></svg></button></div>
     <div class="help-steps"><p><b>01</b><span><strong>放入一张图片</strong>拖到窗口、点击「打开图片」，或从剪贴板粘贴。</span></p><p><b>02</b><span><strong>找到喜欢的画风</strong>调节字符宽度、明暗与配色，结果会实时更新。</span></p><p><b>03</b><span><strong>带走你的作品</strong>复制字符，或导出文本、图片、SVG、HTML 和 ANSI。</span></p></div>
     <div class="shortcut-grid"><span>打开图片<kbd>Ctrl O</kbd></span><span>粘贴图片<kbd>Ctrl V</kbd></span><span>复制字符<kbd>Ctrl C</kbd></span><span>导出作品<kbd>Ctrl S</kbd></span><span>撤销 / 重做<kbd>Ctrl Z / Y</kbd></span><span>适应窗口<kbd>Ctrl 0</kbd></span><span>临时查看原图<kbd>按住空格</kbd></span><span>帮助<kbd>F1</kbd></span></div>
-    <div class="help-note"><svg class="icon"><use href="#i-lock"/></svg><p>所有图片都在本机处理，无需联网。动图仅转换第一帧；单次处理一张图片。字符画适合用等宽字体查看，盲文点阵需要支持 Unicode 的字体。</p></div>
+    <div class="help-note"><svg class="icon"><use href="#i-lock"/></svg><p>图片转换无需联网，所有图片都在本机处理。仅手动检查软件更新时联网。动图仅转换第一帧；单次处理一张图片。字符画适合用等宽字体查看，盲文点阵需要支持 Unicode 的字体。</p></div>
     <details class="reference-details"><summary>开源参考与实现说明</summary><p>参考 ascii-image-converter 的点阵与导出体验、aalib.js 的处理流水线，以及 Chafa 的字体比例与抖动思路。转换核心为独立实现，未复制这些项目的代码。</p><p class="reference-url">github.com/TheZoraiz/ascii-image-converter<br>github.com/mir3z/aalib.js<br>github.com/hpjansson/chafa</p></details>
-    <div class="modal-footer"><span class="version-note">字相 · Glyph Studio 1.1.0</span><button id="help-done" class="button primary">开始创作</button></div>
+    <section class="update-section" aria-label="软件更新">
+      <div class="update-heading"><strong>软件更新 <span id="help-version" class="version-note">1.1.1</span></strong><button id="check-update-btn" class="button secondary compact">检查更新</button></div>
+      <p id="update-status" role="status" aria-live="polite">点击检查 GitHub 最新正式版。</p>
+      <p class="field-hint">仅查询版本信息，图片不会上传。下载后手动替换程序。</p>
+      <button id="download-update-btn" class="button primary compact" hidden>前往下载</button>
+    </section>
+    <div class="modal-footer"><span class="version-note">字相 · Glyph Studio</span><button id="help-done" class="button primary">开始创作</button></div>
   </dialog>
   <input id="file-input" type="file" accept="image/png,image/jpeg,image/webp,image/bmp,image/gif,image/avif" hidden>
   <script src="core.js"></script>

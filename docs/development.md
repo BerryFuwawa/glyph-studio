@@ -16,7 +16,7 @@ npm start
 
 依赖安装成功后，Electron 的运行时仍可能在第一次 `npm start` 或 `npm run build` 时才下载或准备。`npm ci --ignore-scripts` 可以用于不执行安装脚本的审计场景，但不能作为 Electron 可执行文件已经就绪的证明；需要运行桌面或打包验证时，让 Electron 按正常流程完成准备。
 
-发布版不需要开发依赖。源码开发阶段若网络策略阻止 npm 或 Electron 下载，请在允许访问依赖源的环境中完成安装后，再把源码和 `node_modules` 按团队规范处理；程序本身运行时不请求网络。
+发布版不需要开发依赖。源码开发阶段若网络策略阻止 npm 或 Electron 下载，请在允许访问依赖源的环境中完成安装后，再把源码和 `node_modules` 按团队规范处理；发布版的图像处理和导出不请求网络，用户主动检查更新时才会访问 `api.github.com`。
 
 ## 测试和质量检查
 
@@ -87,6 +87,6 @@ node scripts/qa-packaged.cjs
 - 任何新增导出格式都要处理字符、标题和颜色输入的转义，并补充格式级测试。
 - 新的 IPC 必须经过 `src/preload.cjs` 白名单和 `src/main.cjs` 的发送方校验；不要把 Node.js 或文件系统 API 暴露给页面。
 - 新增用户可见行为时，同步更新 README、用户指南、FAQ 和必要的更新日志。
-- 保持离线运行假设，不加入遥测、远程字体、CDN、自动上传或未经说明的网络请求。
+- 保持图像处理离线，不加入遥测、远程字体、CDN、自动上传或未经说明的网络请求；版本检查只能由用户主动触发，并只读取 `api.github.com` 的版本元数据。
 
 贡献流程见 [CONTRIBUTING.md](../.github/CONTRIBUTING.md)，安全问题见 [SECURITY.md](../.github/SECURITY.md)。

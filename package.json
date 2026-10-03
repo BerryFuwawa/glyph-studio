@@ -1,7 +1,7 @@
 {
   "name": "glyph-studio",
   "productName": "Glyph Studio",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "字相 — 离线图像转字符画工作台",
   "main": "src/main.cjs",
   "author": "BerryFuwawa",

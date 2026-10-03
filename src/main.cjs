@@ -1,4 +1,5 @@
-const { app, BrowserWindow, ipcMain, dialog, clipboard, nativeImage, Menu, protocol, net } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, clipboard, nativeImage, Menu, protocol, net, session, shell } = require('electron');
+const { createUpdateChecker } = require('./updates.cjs');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
@@ -35,6 +36,23 @@ app.whenReady().then(async () => {
     return net.fetch(pathToFileURL(path.join(__dirname, asset)).toString());
   });
   Menu.setApplicationMenu(null);
+  const updateSession = session.fromPartition('glyph-updates', { cache: false });
+  updateSession.webRequest.onBeforeRequest((_details, callback) => callback({ cancel: _details.url !== 'https://api.github.com/repos/BerryFuwawa/glyph-studio/releases/latest' }));
+  const checkUpdate = createUpdateChecker({ currentVersion: app.getVersion(), fetchImpl: (url, options) => updateSession.fetch(url, options) });
+  let availableRelease = null;
+  ipcMain.handle('app-version', event => { assertSender(event); return app.getVersion(); });
+  ipcMain.handle('check-updates', async event => {
+    assertSender(event);
+    const result = await checkUpdate.check();
+    availableRelease = result.status === 'available' ? result.releaseUrl : null;
+    return result;
+  });
+  ipcMain.handle('open-update', async event => {
+    assertSender(event);
+    if (!availableRelease) throw new Error('请先检查更新。');
+    await shell.openExternal(availableRelease);
+    return true;
+  });
   window = new BrowserWindow({
     title: '字相 · Glyph Studio', width: 1400, height: 920, minWidth: 980, minHeight: 700,
     backgroundColor: '#101214', frame: false, show: false, icon: path.join(__dirname, 'assets', 'icon.png'),

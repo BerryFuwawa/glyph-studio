@@ -1,6 +1,6 @@
 # 字相 · Glyph Studio
 
-离线图像转字符画工作台，面向 Windows 10/11 x64。程序在本机完成解码、转换和导出，不需要账号、云服务或网络连接。
+离线图像转字符画工作台，面向 Windows 10/11 x64。图片解码、转换和导出均在本机完成；只有你从帮助中手动检查更新时，程序才会向 `api.github.com` 查询版本信息，不上传图片、不需要账号。
 
 ![Glyph Studio 界面截图](docs/images/screenshot.png)
 
@@ -16,11 +16,11 @@
 
 从 [GitHub Releases 下载最新版](https://github.com/BerryFuwawa/glyph-studio/releases/latest)，选择 `.exe` 文件即可运行；同页面提供 `.sha256` 校验文件。
 
-当前版本的构建文件名为 `Glyph-Studio-1.1.0-Windows-x64.exe`。下载后将它放到有写入权限的文件夹并双击运行。便携版不需要安装 Node.js、Python 或其他运行时，也不要求管理员权限；首次启动可能需要几秒钟解压内置运行时到临时目录。
+当前版本的构建文件名为 `Glyph-Studio-1.1.1-Windows-x64.exe`。下载后将它放到有写入权限的文件夹并双击运行。便携版不需要安装 Node.js、Python 或其他运行时，也不要求管理员权限；首次启动可能需要几秒钟解压内置运行时到临时目录。
 
 这是未签名的 Windows 便携程序，Windows Defender SmartScreen 可能显示发布者未知。先确认文件来源和文件哈希（如果维护者同时提供哈希），再在你信任该文件时选择“更多信息”→“仍要运行”。不要为了启动程序而全局关闭 Defender、SmartScreen 或其他系统安全策略；组织策略阻止执行时，请联系管理员或从源码构建。
 
-程序运行期间不请求网络。源码依赖安装和 Electron 运行时准备可能需要网络，见[源码开发](#源码开发)。
+图片处理和导出期间不请求网络。只有在帮助（`F1`）中选择“检查更新”时，程序才会访问 `api.github.com` 获取版本元数据；不会在启动时检查，也不会自动下载或安装更新。源码依赖安装和 Electron 运行时准备可能需要网络，见[源码开发](#源码开发)。
 
 ## 快速开始
 
@@ -91,7 +91,7 @@ node scripts/qa-desktop.cjs
 node scripts/qa-browser.cjs
 ```
 
-`scripts/qa-browser.cjs` 使用本机 Chrome；若自动发现失败，可在 PowerShell 中设置 `CHROME_PATH` 后再运行。验证结果和截图写入被忽略的 `qa-results/` 目录。`npm run build` 生成 Windows x64 portable 目标；当前版本产物为 `dist/Glyph-Studio-1.1.0-Windows-x64.exe`。需要验证解包后的应用时，先确保存在 `dist/win-unpacked/Glyph Studio.exe`，再运行 `node scripts/qa-packaged.cjs`。
+`scripts/qa-browser.cjs` 使用本机 Chrome；若自动发现失败，可在 PowerShell 中设置 `CHROME_PATH` 后再运行。验证结果和截图写入被忽略的 `qa-results/` 目录。`npm run build` 生成 Windows x64 portable 目标；当前版本产物为 `dist/Glyph-Studio-1.1.1-Windows-x64.exe`。需要验证解包后的应用时，先确保存在 `dist/win-unpacked/Glyph Studio.exe`，再运行 `node scripts/qa-packaged.cjs`。
 
 代码结构、测试分层和安全边界见[架构说明](docs/architecture.md)与[开发指南](docs/development.md)。
 
@@ -109,10 +109,11 @@ package.json          依赖与构建配置
 ## 文档
 
 - [用户指南](docs/user-guide.md)：从导入到导出的完整操作说明。
-- [架构说明](docs/architecture.md)：数据流、模块边界和离线安全设计。
+- [架构说明](docs/architecture.md)：数据流、模块边界和本地处理与网络边界设计。
 - [开发指南](docs/development.md)：安装、测试、调试和打包。
-- [常见问题](docs/faq.md)：字体、限制、SmartScreen 和离线行为。
+- [常见问题](docs/faq.md)：字体、限制、SmartScreen 和联网边界。
 - [发布流程](docs/releasing.md)：维护者可选的检查与 GitHub CLI 流程。
+- [1.1.1 发布说明](docs/release-1.1.1.md)：手动检查更新、下载入口和网络边界。
 - [1.1.0 发布说明](docs/release-1.1.0.md)：本版本亮点、下载文件和已知限制。
 - [贡献指南](.github/CONTRIBUTING.md)
 - [安全政策](.github/SECURITY.md)

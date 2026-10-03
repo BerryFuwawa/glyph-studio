@@ -532,6 +532,37 @@
   function releaseHeldView() { if (heldView) { setView(heldView); heldView = null; } }
   document.addEventListener('keyup', event => { if (event.code === 'Space') releaseHeldView(); });
   window.addEventListener('blur', releaseHeldView);
+  if (window.desktop?.getAppVersion) {
+    window.desktop.getAppVersion().then(version => {
+      $('app-version').textContent = `GLYPH STUDIO ${version}`;
+      $('help-version').textContent = version;
+    }).catch(() => {});
+  } else {
+    $('check-update-btn').disabled = true;
+    $('update-status').textContent = '请在桌面应用中检查更新。';
+  }
+  $('check-update-btn').addEventListener('click', async () => {
+    const button = $('check-update-btn');
+    button.disabled = true;
+    button.textContent = '检查中…';
+    $('update-status').textContent = '正在连接 GitHub，请稍候…';
+    $('download-update-btn').hidden = true;
+    try {
+      const update = await window.desktop.checkForUpdates();
+      $('update-status').textContent = update.status === 'available'
+        ? `发现新版本 ${update.latestVersion}，当前版本 ${update.currentVersion}。`
+        : update.status === 'current' ? `当前版本 ${update.currentVersion} 已是最新版。` : update.message;
+      $('download-update-btn').hidden = update.status !== 'available';
+      button.textContent = update.status === 'error' ? '重新检查' : '检查更新';
+    } catch {
+      $('update-status').textContent = '检查失败，请稍后重试。';
+      button.textContent = '重新检查';
+    } finally { button.disabled = false; }
+  });
+  $('download-update-btn').addEventListener('click', async () => {
+    try { await window.desktop.openUpdatePage(); }
+    catch { $('update-status').textContent = '无法打开浏览器，请重新检查后重试。'; }
+  });
   updateControls();
   setView('compare');
 
