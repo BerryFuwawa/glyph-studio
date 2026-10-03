@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   const $ = id => document.getElementById(id);
-  const defaults = { mode: 'ascii', columns: 120, brightness: 0, contrast: 1, gamma: 1, threshold: 0.5, autoContrast: true, dither: false, invert: false, ramp: ' .:-=+*#%@', color: 'mono', palette: 'ivory' };
+  const defaults = { mode: 'ascii', columns: 120, brightness: 0, contrast: 1, gamma: 1, threshold: 0.5, lineSpacing: 0, characterSpacing: 0, autoContrast: true, dither: false, invert: false, ramp: ' .:-=+*#%@', color: 'mono', palette: 'ivory' };
   const modeNames = { ascii: ['经典 ASCII', 'ASCII', '10 级明暗'], braille: ['盲文点阵', 'BRAILLE', '每格 8 个点'], edges: ['轮廓线稿', 'CONTOUR', '方向边缘'], blocks: ['像素方块', 'BLOCKS', '5 级像素'] };
   let settings = { ...defaults };
   try {
@@ -13,6 +13,8 @@
       settings.contrast = Math.max(0.5, Math.min(2.5, settings.contrast));
       settings.gamma = Math.max(0.4, Math.min(2.4, settings.gamma));
       settings.threshold = Math.max(0.1, Math.min(0.9, settings.threshold));
+      settings.lineSpacing = Math.max(0, Math.min(24, Math.round(settings.lineSpacing)));
+      settings.characterSpacing = Math.max(0, Math.min(12, Math.round(settings.characterSpacing)));
       AsciiCore.convert({ width: 1, height: 1, data: new Uint8ClampedArray([0, 0, 0, 255]) }, { ramp: settings.ramp });
     }
   } catch { settings = { ...defaults }; }
@@ -78,7 +80,7 @@
     scheduleRender(0);
   }
   function updateControls() {
-    for (const id of ['columns', 'brightness', 'contrast', 'gamma', 'threshold']) {
+    for (const id of ['columns', 'brightness', 'contrast', 'gamma', 'threshold', 'lineSpacing', 'characterSpacing']) {
       $(id).value = settings[id];
       updateRange(id);
     }
@@ -102,7 +104,7 @@
     const input = $(id);
     const value = Number(input.value);
     input.style.setProperty('--fill', `${(value - Number(input.min)) / (Number(input.max) - Number(input.min)) * 100}%`);
-    $(`${id}-out`).textContent = ['contrast', 'gamma', 'threshold'].includes(id) ? value.toFixed(2) : id === 'brightness' && value > 0 ? `+${value}` : String(value);
+    $(`${id}-out`).textContent = ['contrast', 'gamma', 'threshold'].includes(id) ? value.toFixed(2) : ['lineSpacing', 'characterSpacing'].includes(id) ? `${value} px` : id === 'brightness' && value > 0 ? `+${value}` : String(value);
   }
   function validateRamp() {
     if (settings.mode !== 'ascii') { $('ramp-error').hidden = true; $('ramp').classList.remove('invalid'); return true; }
@@ -307,13 +309,16 @@
   function calculateMetrics(output, fontSize = 14, padding = 28) {
     const measure = document.createElement('canvas').getContext('2d');
     measure.font = `${fontSize}px "Cascadia Mono", "Consolas", "DejaVu Sans Mono", monospace`;
-    let cellWidth = measure.measureText('M').width;
-    let lineHeight = cellWidth * 2;
-    let width = Math.ceil(output.columns * cellWidth + padding * 2);
-    let height = Math.ceil(output.rows * lineHeight + padding * 2);
+    let glyphWidth = measure.measureText('M').width;
+    let characterSpacing = renderedSettings.characterSpacing;
+    let lineSpacing = renderedSettings.lineSpacing;
+    let cellWidth = glyphWidth + characterSpacing;
+    let lineHeight = glyphWidth * 2 + lineSpacing;
+    let width = Math.ceil(output.columns * glyphWidth + (output.columns - 1) * characterSpacing + padding * 2);
+    let height = Math.ceil(output.rows * glyphWidth * 2 + (output.rows - 1) * lineSpacing + padding * 2);
     const limitScale = Math.min(1, 8192 / Math.max(width, height), Math.sqrt(18000000 / (width * height)));
-    if (limitScale < 1) { fontSize *= limitScale; padding *= limitScale; cellWidth *= limitScale; lineHeight *= limitScale; width = Math.ceil(width * limitScale); height = Math.ceil(height * limitScale); }
-    return { fontSize, cellWidth, lineHeight, width, height, padding };
+    if (limitScale < 1) { fontSize *= limitScale; padding *= limitScale; glyphWidth *= limitScale; characterSpacing *= limitScale; lineSpacing *= limitScale; cellWidth *= limitScale; lineHeight *= limitScale; width = Math.ceil(width * limitScale); height = Math.ceil(height * limitScale); }
+    return { fontSize, glyphWidth, characterSpacing, lineSpacing, cellWidth, lineHeight, width, height, padding };
   }
   function paintCanvas(canvas, output, snapshot, metrics) {
     const palette = GlyphExport.getPalette(snapshot);
@@ -332,7 +337,7 @@
         const character = output.characters[index];
         if (character === ' ' || character === '\u2800') continue;
         if (snapshot.color === 'original') ctx.fillStyle = GlyphExport.colorAt(output, index, snapshot);
-        ctx.fillText(character, metrics.padding + x * metrics.cellWidth, baseline, metrics.cellWidth * 1.02);
+        ctx.fillText(character, metrics.padding + x * metrics.cellWidth, baseline, metrics.glyphWidth * 1.02);
       }
     }
   }
@@ -402,7 +407,7 @@
   function updateExportOptions() {
     const format = document.querySelector('input[name=export-format]:checked').value;
     document.querySelectorAll('.export-option').forEach(label => label.classList.toggle('selected', label.querySelector('input').checked));
-    const notes = { txt: '纯文本保存字符和换行，不包含颜色。请用等宽字体查看。', png: `图片大小 ${metric.width} × ${metric.height} 像素，保留当前背景与配色。`, svg: '保留矢量文字和颜色。另一台设备的字体不同，字形可能略有差别。', html: '独立 HTML 文件，无需网络。颜色、字符与换行都会保留。', ansi: '含 ANSI 真彩色控制码。请在支持 UTF-8 和真彩色的终端查看。' };
+    const notes = { txt: '纯文本保存字符和换行，不包含颜色或像素间距。请用等宽字体查看。', png: `图片大小 ${metric.width} × ${metric.height} 像素，保留当前背景与配色。`, svg: '保留矢量文字和颜色。另一台设备的字体不同，字形可能略有差别。', html: '独立 HTML 文件，无需网络。保留颜色、字符、行间距与字符间距。', ansi: '含 ANSI 真彩色控制码，不包含像素间距。请在支持 UTF-8 和真彩色的终端查看。' };
     $('export-note').textContent = notes[format];
   }
   async function saveOutput() {
@@ -435,8 +440,15 @@
     } catch (error) { notify(error.message, true); }
   }
 
-  for (const id of ['columns', 'brightness', 'contrast', 'gamma', 'threshold']) {
-    $(id).addEventListener('input', () => { settings[id] = Number($(id).value); updateRange(id); scheduleRender(); });
+  for (const id of ['columns', 'brightness', 'contrast', 'gamma', 'threshold', 'lineSpacing', 'characterSpacing']) {
+    $(id).addEventListener('input', () => {
+      settings[id] = Number($(id).value);
+      updateRange(id);
+      if (['lineSpacing', 'characterSpacing'].includes(id) && currentReady()) {
+        renderedSettings = { ...renderedSettings, [id]: settings[id] };
+        drawResult();
+      } else scheduleRender();
+    });
     $(id).addEventListener('change', commitHistory);
   }
   for (const [id, key] of [['auto-contrast', 'autoContrast'], ['dither', 'dither'], ['invert', 'invert']]) $(id).addEventListener('change', () => setSettings({ [key]: $(id).checked }));

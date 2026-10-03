@@ -14,25 +14,29 @@
     const offset = index * 3;
     return `#${Array.from(result.colors.slice(offset, offset + 3)).map(v => v.toString(16).padStart(2, '0')).join('')}`;
   }
+  function metricValue(metric, key, fallback) {
+    const value = metric && Number(metric[key]);
+    return Number.isFinite(value) ? value : fallback;
+  }
   function validateResult(result) {
     if (!result || !Number.isInteger(result.columns) || !Number.isInteger(result.rows) || result.columns < 1 || result.rows < 1 || result.characters.length !== result.columns * result.rows || result.colors.length !== result.columns * result.rows * 3) throw new Error('无效的字符结果。');
   }
   function formatSVG(result, settings, metric) {
     validateResult(result);
-    const { width, height, cellWidth, lineHeight, fontSize, padding } = metric;
+    const width = metricValue(metric, 'width', 0);
+    const height = metricValue(metric, 'height', 0);
+    const cellWidth = metricValue(metric, 'cellWidth', metricValue(metric, 'glyphWidth', 0) + metricValue(metric, 'characterSpacing', 0));
+    const lineHeight = metricValue(metric, 'lineHeight', metricValue(metric, 'glyphWidth', 0) * 2 + metricValue(metric, 'lineSpacing', 0));
+    const fontSize = metricValue(metric, 'fontSize', 0);
+    const padding = metricValue(metric, 'padding', 0);
     const palette = getPalette(settings);
     const parts = [`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img"><title>Glyph Studio 字符画</title><rect width="100%" height="100%" fill="${palette.background}"/><g font-family="Cascadia Mono,Consolas,DejaVu Sans Mono,monospace" font-size="${fontSize}" xml:space="preserve">`];
     for (let y = 0; y < result.rows; y++) {
-      if (settings.color !== 'original') {
-        const line = result.characters.slice(y * result.columns, (y + 1) * result.columns).join('');
-        parts.push(`<text x="${padding}" y="${(padding + y * lineHeight + fontSize).toFixed(3)}" textLength="${(result.columns * cellWidth).toFixed(3)}" lengthAdjust="spacingAndGlyphs" fill="${palette.foreground}">${escapeMarkup(line)}</text>`);
-      } else {
-        for (let x = 0; x < result.columns; x++) {
-          const index = y * result.columns + x;
-          const char = result.characters[index];
-          if (char === ' ' || char === '\u2800') continue;
-          parts.push(`<text x="${(padding + x * cellWidth).toFixed(3)}" y="${(padding + y * lineHeight + fontSize).toFixed(3)}" fill="${colorAt(result, index, settings)}">${escapeMarkup(char)}</text>`);
-        }
+      for (let x = 0; x < result.columns; x++) {
+        const index = y * result.columns + x;
+        const char = result.characters[index];
+        if (settings.color === 'original' && (char === ' ' || char === '\u2800')) continue;
+        parts.push(`<text x="${(padding + x * cellWidth).toFixed(3)}" y="${(padding + y * lineHeight + fontSize).toFixed(3)}" fill="${settings.color === 'original' ? colorAt(result, index, settings) : palette.foreground}">${escapeMarkup(char)}</text>`);
       }
     }
     parts.push('</g></svg>');
@@ -57,9 +61,10 @@
         lines.push(line);
       }
     }
-    const font = metric.fontSize;
-    const lineHeight = metric.lineHeight;
-    return `<!doctype html>\n<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><title>${escapeMarkup(title || 'Glyph Studio 字符画')}</title><style>body{margin:0;padding:32px;background:${palette.background};color:${palette.foreground};overflow:auto}pre{margin:0;font:${font}px/${lineHeight}px "Cascadia Mono","Consolas","DejaVu Sans Mono",monospace;font-variant-ligatures:none;letter-spacing:0;white-space:pre;tab-size:1}</style></head><body><pre>${lines.join('\n')}</pre></body></html>`;
+    const font = metricValue(metric, 'fontSize', 0);
+    const lineHeight = metricValue(metric, 'lineHeight', metricValue(metric, 'glyphWidth', 0) * 2 + metricValue(metric, 'lineSpacing', 0));
+    const characterSpacing = metricValue(metric, 'characterSpacing', 0);
+    return `<!doctype html>\n<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><title>${escapeMarkup(title || 'Glyph Studio 字符画')}</title><style>body{margin:0;padding:32px;background:${palette.background};color:${palette.foreground};overflow:auto}pre{margin:0;font:${font}px/${lineHeight}px "Cascadia Mono","Consolas","DejaVu Sans Mono",monospace;font-variant-ligatures:none;letter-spacing:${characterSpacing}px;white-space:pre;tab-size:1}</style></head><body><pre>${lines.join('\n')}</pre></body></html>`;
   }
   function formatANSI(result, settings) {
     validateResult(result);

@@ -78,6 +78,13 @@
         <div class="range-control"><div class="range-label"><label for="contrast">对比度</label><output id="contrast-out">1.00</output></div><input type="range" id="contrast" min="0.5" max="2.5" step="0.05" value="1"></div>
       </section>
 
+      <section class="control-section">
+        <div class="section-heading"><h2>排版间距</h2><span class="help-label">额外留白</span></div>
+        <div class="range-control"><div class="range-label"><label for="lineSpacing">行间距</label><output id="lineSpacing-out">0 px</output></div><input type="range" id="lineSpacing" min="0" max="24" step="1" value="0" aria-describedby="spacing-hint"></div>
+        <div class="range-control"><div class="range-label"><label for="characterSpacing">字符间距</label><output id="characterSpacing-out">0 px</output></div><input type="range" id="characterSpacing" min="0" max="12" step="1" value="0" aria-describedby="spacing-hint"></div>
+        <p id="spacing-hint" class="field-hint">0 保持默认排版；图片、SVG 和 HTML 导出保留间距。</p>
+      </section>
+
       <section class="control-section color-section">
         <div class="section-heading"><h2>输出色彩</h2></div>
         <div class="segmented color-mode" role="group" aria-label="输出色彩"><button data-color="mono" class="active" aria-pressed="true">单色</button><button data-color="original" aria-pressed="false">原图色</button></div>
@@ -131,7 +138,7 @@
     </section>
   </main>
 
-  <footer class="statusbar"><div><span class="status-indicator"></span><span id="status-text">正在加载示例图片</span></div><div><span id="status-font">等宽字符 / UTF-8</span><span class="status-divider">|</span><span>GLYPH STUDIO 1.0</span></div></footer>
+  <footer class="statusbar"><div><span class="status-indicator"></span><span id="status-text">正在加载示例图片</span></div><div><span id="status-font">等宽字符 / UTF-8</span><span class="status-divider">|</span><span>GLYPH STUDIO 1.1</span></div></footer>
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
   <dialog id="export-dialog" class="modal export-modal">
@@ -154,7 +161,7 @@
     <div class="shortcut-grid"><span>打开图片<kbd>Ctrl O</kbd></span><span>粘贴图片<kbd>Ctrl V</kbd></span><span>复制字符<kbd>Ctrl C</kbd></span><span>导出作品<kbd>Ctrl S</kbd></span><span>撤销 / 重做<kbd>Ctrl Z / Y</kbd></span><span>适应窗口<kbd>Ctrl 0</kbd></span><span>临时查看原图<kbd>按住空格</kbd></span><span>帮助<kbd>F1</kbd></span></div>
     <div class="help-note"><svg class="icon"><use href="#i-lock"/></svg><p>所有图片都在本机处理，无需联网。动图仅转换第一帧；单次处理一张图片。字符画适合用等宽字体查看，盲文点阵需要支持 Unicode 的字体。</p></div>
     <details class="reference-details"><summary>开源参考与实现说明</summary><p>参考 ascii-image-converter 的点阵与导出体验、aalib.js 的处理流水线，以及 Chafa 的字体比例与抖动思路。转换核心为独立实现，未复制这些项目的代码。</p><p class="reference-url">github.com/TheZoraiz/ascii-image-converter<br>github.com/mir3z/aalib.js<br>github.com/hpjansson/chafa</p></details>
-    <div class="modal-footer"><span class="version-note">字相 · Glyph Studio 1.0.0</span><button id="help-done" class="button primary">开始创作</button></div>
+    <div class="modal-footer"><span class="version-note">字相 · Glyph Studio 1.1.0</span><button id="help-done" class="button primary">开始创作</button></div>
   </dialog>
   <input id="file-input" type="file" accept="image/png,image/jpeg,image/webp,image/bmp,image/gif,image/avif" hidden>
   <script src="core.js"></script>

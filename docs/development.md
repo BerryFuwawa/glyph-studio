@@ -59,6 +59,14 @@ node scripts/qa-browser.cjs
 
 ## 打包
 
+排版间距的桌面检查：
+
+```powershell
+node scripts/qa-spacing.cjs
+```
+
+覆盖滑块与画布尺寸、PNG 尺寸、TXT/ANSI 字符不变、参数记忆、撤销重做、模式切换和旧设置兼容。
+
 ```powershell
 npm run build
 ```

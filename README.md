@@ -9,14 +9,14 @@
 - 四种转换模式：经典 ASCII、盲文点阵、轮廓线稿、像素方块。
 - 五种导出格式：TXT、PNG、SVG、HTML、ANSI。
 - 支持拖放、原生打开图片和剪贴板粘贴；结果实时预览。
-- 可调整字符宽度、亮度、对比度、Gamma、阈值、自动增强、抖动、反转和配色。
+- 可调整字符宽度、亮度、对比度、Gamma、阈值、自动增强、抖动、反转、配色和排版间距。
 - 转换参数保存在本机；导入图片和生成的字符结果不会写入历史文件。
 
 ## 使用便携版
 
 从 [GitHub Releases 下载最新版](https://github.com/BerryFuwawa/glyph-studio/releases/latest)，选择 `.exe` 文件即可运行；同页面提供 `.sha256` 校验文件。
 
-当前版本的构建文件名为 `Glyph-Studio-1.0.0-Windows-x64.exe`。下载后将它放到有写入权限的文件夹并双击运行。便携版不需要安装 Node.js、Python 或其他运行时，也不要求管理员权限；首次启动可能需要几秒钟解压内置运行时到临时目录。
+当前版本的构建文件名为 `Glyph-Studio-1.1.0-Windows-x64.exe`。下载后将它放到有写入权限的文件夹并双击运行。便携版不需要安装 Node.js、Python 或其他运行时，也不要求管理员权限；首次启动可能需要几秒钟解压内置运行时到临时目录。
 
 这是未签名的 Windows 便携程序，Windows Defender SmartScreen 可能显示发布者未知。先确认文件来源和文件哈希（如果维护者同时提供哈希），再在你信任该文件时选择“更多信息”→“仍要运行”。不要为了启动程序而全局关闭 Defender、SmartScreen 或其他系统安全策略；组织策略阻止执行时，请联系管理员或从源码构建。
 
@@ -41,15 +41,17 @@
 
 字符宽度界面范围为 40–280 列；极端长宽比的图片会按输出行数和总字符数上限自动缩小。ASCII 模式显示字符序列输入框；盲文和轮廓模式显示阈值；轮廓和方块模式不使用抖动补偿。
 
+“排版间距”侧栏可以增加字符行之间的行间距（0–24 px）和相邻字符之间的字符间距（0–12 px），两项默认均为 0。画布预览以及 PNG、SVG、HTML 导出会保留这两项视觉间距；复制出的字符字符串、TXT 和 ANSI 导出保持字符与换行不变。
+
 ### 导出格式
 
 | 格式 | 内容 | 适合用途 |
 | --- | --- | --- |
 | TXT | UTF-8 纯文本、固定列宽和换行，无颜色 | 粘贴、编辑、文字素材 |
-| PNG | 当前预览的字符画图片和配色 | 分享、文档插图 |
-| SVG | 矢量文字和配色 | 缩放、排版 |
-| HTML | 可离线打开的独立网页，含字符和颜色 | 浏览器展示 |
-| ANSI | UTF-8 文本与真彩色控制码 | 支持 ANSI 真彩色的终端 |
+| PNG | 当前预览的字符画图片、配色和排版间距 | 分享、文档插图 |
+| SVG | 矢量文字、配色和排版间距 | 缩放、排版 |
+| HTML | 可离线打开的独立网页，含字符、颜色和排版间距 | 浏览器展示 |
+| ANSI | UTF-8 文本与真彩色控制码，不包含像素间距 | 支持 ANSI 真彩色的终端 |
 
 TXT 和 ANSI 建议使用 Cascadia Mono 或 Consolas 等宽字体。SVG/HTML 在不同设备上可能使用不同字体，字形会略有差异；需要保留当前预览外观时请选择 PNG。保存时由 Windows 原生对话框选择目标位置；如果手动输入的扩展名与格式不一致，程序会补上实际格式扩展名。
 
@@ -89,7 +91,7 @@ node scripts/qa-desktop.cjs
 node scripts/qa-browser.cjs
 ```
 
-`scripts/qa-browser.cjs` 使用本机 Chrome；若自动发现失败，可在 PowerShell 中设置 `CHROME_PATH` 后再运行。验证结果和截图写入被忽略的 `qa-results/` 目录。`npm run build` 生成 Windows x64 portable 目标；当前版本产物为 `dist/Glyph-Studio-1.0.0-Windows-x64.exe`。需要验证解包后的应用时，先确保存在 `dist/win-unpacked/Glyph Studio.exe`，再运行 `node scripts/qa-packaged.cjs`。
+`scripts/qa-browser.cjs` 使用本机 Chrome；若自动发现失败，可在 PowerShell 中设置 `CHROME_PATH` 后再运行。验证结果和截图写入被忽略的 `qa-results/` 目录。`npm run build` 生成 Windows x64 portable 目标；当前版本产物为 `dist/Glyph-Studio-1.1.0-Windows-x64.exe`。需要验证解包后的应用时，先确保存在 `dist/win-unpacked/Glyph Studio.exe`，再运行 `node scripts/qa-packaged.cjs`。
 
 代码结构、测试分层和安全边界见[架构说明](docs/architecture.md)与[开发指南](docs/development.md)。
 
@@ -111,6 +113,7 @@ package.json          依赖与构建配置
 - [开发指南](docs/development.md)：安装、测试、调试和打包。
 - [常见问题](docs/faq.md)：字体、限制、SmartScreen 和离线行为。
 - [发布流程](docs/releasing.md)：维护者可选的检查与 GitHub CLI 流程。
+- [1.1.0 发布说明](docs/release-1.1.0.md)：本版本亮点、下载文件和已知限制。
 - [贡献指南](.github/CONTRIBUTING.md)
 - [安全政策](.github/SECURITY.md)
 - [更新日志](docs/CHANGELOG.md)
