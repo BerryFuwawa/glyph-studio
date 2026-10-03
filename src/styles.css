@@ -16,3 +16,12 @@
 .update-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .update-section p { font-size: 12px; line-height: 1.6; margin: 10px 0; }
 .update-section .version-note { margin-left: 8px; }
+.statusbar>div { min-width: 0; }
+#status-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 260px; }
+.update-notice { display: inline-flex; align-items: center; gap: 6px; color: #ff8585; white-space: nowrap; flex: none; padding: 3px 0; font-size: 10px; }
+.update-dot { width: 6px; height: 6px; border-radius: 50%; background: #ff4545; box-shadow: 0 0 7px #ff4545; flex: none; }
+#startup-update-status { font: 10px var(--body); color: #b5a487; white-space: nowrap; padding: 3px 0; }
+#startup-update-status:hover, #cancel-update-btn:hover { color: var(--accent); }
+#cancel-update-btn { white-space: nowrap; color: #b8c2ca; font-size: 10px; }
+.update-section .button { margin-right: 6px; }
+@media(max-width:1100px) { #status-text { max-width: 155px; } #status-font { display: none; } }

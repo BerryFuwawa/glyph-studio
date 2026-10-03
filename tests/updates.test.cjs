@@ -7,7 +7,8 @@ const {
   API_URL,
   MAX_BODY_BYTES,
   isStableTag,
-  releaseUrlForTag
+  releaseUrlForTag,
+  selectPortableAsset
 } = require('../src/updates.cjs');
 
 function jsonResponse(value, status = 200, headers = {}) {
@@ -44,6 +45,7 @@ test('reports a newer stable release with numeric semver and a fixed release URL
     currentVersion: '1.2.9',
     latestVersion: 'v1.10.0',
     releaseUrl: 'https://github.com/BerryFuwawa/glyph-studio/releases/tag/v1.10.0',
+    asset: null,
     message: '发现新版本 v1.10.0。'
   });
   assert.equal(calls.length, 1);
@@ -52,6 +54,17 @@ test('reports a newer stable release with numeric semver and a fixed release URL
   assert.equal(calls[0].options.headers.Accept, 'application/vnd.github+json');
   assert.equal(calls[0].options.credentials, 'omit');
   assert.equal(calls[0].options.redirect, 'error');
+});
+
+test('portable update only selects the matching official, uploaded, hashed executable', () => {
+  const name = 'Glyph-Studio-1.3.0-Windows-x64.exe';
+  const url = `https://github.com/BerryFuwawa/glyph-studio/releases/download/v1.3.0/${name}`;
+  const asset = { name, browser_download_url: url, size: 1024, digest: `sha256:${'a'.repeat(64)}`, state: 'uploaded' };
+  assert.deepEqual(selectPortableAsset({ tag_name: 'v1.3.0', assets: [asset] }), { name, url, size: 1024, sha256: 'a'.repeat(64) });
+  for (const patch of [{ browser_download_url: 'https://example.com/app.exe' }, { digest: null }, { size: 300 * 1024 * 1024 }, { state: 'new' }, { name: '../app.exe' }]) {
+    assert.equal(selectPortableAsset({ tag_name: 'v1.3.0', assets: [{ ...asset, ...patch }] }), null);
+  }
+  assert.equal(selectPortableAsset({ tag_name: 'v1.3.0', assets: [asset, asset] }), null);
 });
 
 test('reports current when the latest release is equal or older', async () => {

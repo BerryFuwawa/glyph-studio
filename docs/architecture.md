@@ -29,6 +29,9 @@ flowchart LR
 | `src/core.js` | 无依赖的亮度映射、面积采样、Gamma/对比度、抖动、Braille 点位和 Sobel 方向边缘算法 |
 | `src/export.js` | 配色、HTML/SVG 转义和 SVG、HTML、ANSI 格式化 |
 | `src/assets/` | 内置图标和示例图片 |
+| `src/updates.cjs` | 比较稳定版本，选择对应架构的官方发布文件和 SHA-256 摘要 |
+| `src/portable-update.cjs` | 下载、显示进度、处理取消和校验，启动更新助手 |
+| `src/update-helper.ps1` | 隐藏运行，等待旧进程退出，同目录替换、启动确认、清理旧文件或回滚 |
 
 ## 转换流程
 
@@ -48,8 +51,10 @@ flowchart LR
 
 - BrowserWindow 开启 `sandbox` 和 `contextIsolation`，关闭 `nodeIntegration`。
 - 禁止新窗口和页面导航；权限请求统一拒绝。
-- 主窗口会话的普通 HTTP、HTTPS、WebSocket 请求在会话层取消，应用资源通过受限的本地协议提供；帮助中的“检查更新”是用户主动触发的联网例外，只向 `api.github.com` 读取版本元数据。
-- 版本检查不发送图片或账号信息，不在应用启动时运行，也不自动下载或安装更新；发现新版本后由用户点击“前往下载”在默认浏览器打开官方 GitHub Release 页面。
+- 主窗口会话的普通 HTTP、HTTPS、WebSocket 请求在会话层取消，应用资源通过受限的本地协议提供；1.3.0 及之后的 Windows x64 便携版启动检查由更新通道发起，只向 `api.github.com` 读取最新稳定版本元数据。
+- 启动检查和更新下载不发送图片、账号或其他应用数据。发现新版本后，只有用户确认“更新并重启”才会从 GitHub Release 或 `release-assets.githubusercontent.com` 下载官方 Windows x64 资产；下载显示进度并可取消，完成后核对发布的 SHA-256 与文件大小，取消或失败都保留旧版本。
+- 下载完成后程序退出，隐藏的 Windows 更新助手等待旧文件解锁，保留备份并替换为官方版本文件名，再启动新程序。新程序完成启动握手后才删除备份；下载不完整、只读目录、缺少摘要、校验失败或启动失败时保留或恢复旧版本。源码开发和非 Windows/非便携运行时只检测并打开官方下载页面，不执行自替换。
+- 下载总时限为 45 分钟，连续 90 秒没有收到新数据则超时。Windows 助手先确认已启动独立工作进程，再允许旧应用退出；工作进程不依赖旧应用继续运行。
 - HTML 导出会转义字符和标题，并使用 `default-src 'none'` 的内容安全策略；导出文件仍应按普通用户文件管理。
 - 便携版构建未签名，Windows 可能提示 SmartScreen。文档不会建议全局关闭系统安全功能；使用者应核对来源或哈希后再决定是否运行。
 

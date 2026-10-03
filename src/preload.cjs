@@ -3,6 +3,13 @@ contextBridge.exposeInMainWorld('desktop', {
   getAppVersion: () => ipcRenderer.invoke('app-version'),
   checkForUpdates: () => ipcRenderer.invoke('check-updates'),
   openUpdatePage: () => ipcRenderer.invoke('open-update'),
+  installUpdate: () => ipcRenderer.invoke('install-update'),
+  cancelUpdate: () => ipcRenderer.invoke('cancel-update'),
+  onUpdateProgress: callback => {
+    const listener = (_event, progress) => callback(progress);
+    ipcRenderer.on('update-progress', listener);
+    return () => ipcRenderer.removeListener('update-progress', listener);
+  },
   openImage: () => ipcRenderer.invoke('open-image'),
   pasteImage: () => ipcRenderer.invoke('paste-image'),
   copyText: text => ipcRenderer.invoke('copy-text', text),

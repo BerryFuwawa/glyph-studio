@@ -1,6 +1,6 @@
 # 字相 · Glyph Studio
 
-离线图像转字符画工作台，面向 Windows 10/11 x64。图片解码、转换和导出均在本机完成；只有你从帮助中手动检查更新时，程序才会向 `api.github.com` 查询版本信息，不上传图片、不需要账号。
+面向 Windows 10/11 x64 的本地图像转字符画工作台。图片解码、转换和导出均在本机完成；1.3.0 起程序每次启动会向 `api.github.com` 查询最新稳定版本元数据，确认更新后才会从 GitHub 官方资产下载对应的 Windows x64 便携版，不上传图片、不需要账号。
 
 ![Glyph Studio 界面截图](docs/images/screenshot.png)
 
@@ -16,11 +16,21 @@
 
 从 [GitHub Releases 下载最新版](https://github.com/BerryFuwawa/glyph-studio/releases/latest)，选择 `.exe` 文件即可运行；同页面提供 `.sha256` 校验文件。
 
-当前版本的构建文件名为 `Glyph-Studio-1.2.0-Windows-x64.exe`。下载后将它放到有写入权限的文件夹并双击运行。便携版不需要安装 Node.js、Python 或其他运行时，也不要求管理员权限；首次启动可能需要几秒钟解压内置运行时到临时目录。
+当前版本的构建文件名为 `Glyph-Studio-1.3.0-Windows-x64.exe`。下载后将它放到有写入权限的文件夹并双击运行。便携版不需要安装 Node.js、Python 或其他运行时，也不要求管理员权限；首次启动可能需要几秒钟解压内置运行时到临时目录。
 
 这是未签名的 Windows 便携程序，Windows Defender SmartScreen 可能显示发布者未知。先确认文件来源和文件哈希（如果维护者同时提供哈希），再在你信任该文件时选择“更多信息”→“仍要运行”。不要为了启动程序而全局关闭 Defender、SmartScreen 或其他系统安全策略；组织策略阻止执行时，请联系管理员或从源码构建。
 
-图片处理和导出期间不请求网络。只有在帮助（`F1`）中选择“检查更新”时，程序才会访问 `api.github.com` 获取版本元数据；不会在启动时检查，也不会自动下载或安装更新。源码依赖安装和 Electron 运行时准备可能需要网络，见[源码开发](#源码开发)。
+图片处理和导出期间不会发送网络请求。便携版启动时会访问 `api.github.com` 获取最新稳定版本元数据；只有你确认“更新并重启”后，程序才会从 GitHub Release 或 `release-assets.githubusercontent.com` 下载官方 Windows x64 资产。更新下载会显示进度，并在替换前校验发布的 SHA-256 和文件大小；不会上传图片、账号或其他应用数据。源码开发和非 Windows/非便携运行时只能检测更新并打开官方下载页面，不会替换或删除源码、Electron 运行时或其他文件。源码依赖安装和 Electron 运行时准备可能需要网络，见[源码开发](#源码开发)。
+
+## 检查与安装更新
+
+1.3.0 及之后的 Windows x64 便携版每次启动会自动检查最新稳定版本。右下角会显示“自动检查更新…”，检查完成后显示“已是最新版”或“检查失败点击重试”；离线或请求失败时可以点击状态重试。发现新版本时，右下角会出现红点并显示“检测到更新，点击更新”。
+
+![右下角红点更新提示示例](docs/images/auto-update.png)
+
+点击更新后，程序会先确认“更新并重启”，并提醒先导出当前作品。确认后，程序把对应的官方 Windows x64 Release EXE 下载到当前便携版所在目录，显示进度并提供取消下载按钮，然后校验 SHA-256 和文件大小。取消下载、目录只读、下载不完整、缺少摘要、网络中断或替换失败时会显示中文错误，保留旧版本或恢复备份，不需要管理员权限。替换过程由隐藏的 Windows 更新助手等待旧程序退出和文件解锁，再保留备份、替换为官方版本文件名并重启；只有新程序完成启动握手后才删除备份。
+
+更新会保留同一 `userData` 中的参数设置；当前导入的图片和字符结果只在本次运行内存中，重启后不会恢复，请在确认更新前导出。1.2.0 首次升级到 1.3.0 时，旧版仍需按 `F1` 手动检查更新并在浏览器中下载，因为旧版没有内置替换逻辑；完成一次手动升级后，1.3.0 及之后版本支持上述流程。
 
 ## 快速开始
 
@@ -80,7 +90,7 @@ npm test
 npm run build
 ```
 
-`npm ci` 安装锁定的开发依赖。Electron 的可执行运行时可能在第一次 `npm start` 或 `npm run build` 时才完成下载或准备，因此依赖安装命令成功不等于 Electron 已经可以启动。`npm ci --ignore-scripts` 适合做不执行安装脚本的依赖审计或测试准备；随后仍需让 Electron 运行时按正常流程完成准备。源码开发阶段可能需要网络，打包后的便携版运行阶段不需要网络。
+`npm ci` 安装锁定的开发依赖。Electron 的可执行运行时可能在第一次 `npm start` 或 `npm run build` 时才完成下载或准备，因此依赖安装命令成功不等于 Electron 已经可以启动。`npm ci --ignore-scripts` 适合做不执行安装脚本的依赖审计或测试准备；随后仍需让 Electron 运行时按正常流程完成准备。源码开发阶段可能需要网络。源码运行和非 Windows/非便携运行时可以读取版本元数据并前往官方 Release 下载，但不会执行便携版自替换；打包后的 Windows x64 便携版运行阶段仅在启动检查或你确认更新下载时联网。
 
 常用验证命令：
 
@@ -91,7 +101,7 @@ node scripts/qa-desktop.cjs
 node scripts/qa-browser.cjs
 ```
 
-`scripts/qa-browser.cjs` 使用本机 Chrome；若自动发现失败，可在 PowerShell 中设置 `CHROME_PATH` 后再运行。验证结果和截图写入被忽略的 `qa-results/` 目录。`npm run build` 生成 Windows x64 portable 目标；当前版本产物为 `dist/Glyph-Studio-1.2.0-Windows-x64.exe`。需要验证解包后的应用时，先确保存在 `dist/win-unpacked/Glyph Studio.exe`，再运行 `node scripts/qa-packaged.cjs`。
+`scripts/qa-browser.cjs` 使用本机 Chrome；若自动发现失败，可在 PowerShell 中设置 `CHROME_PATH` 后再运行。验证结果和截图写入被忽略的 `qa-results/` 目录。`npm run build` 生成 Windows x64 portable 目标；当前版本产物为 `dist/Glyph-Studio-1.3.0-Windows-x64.exe`。需要验证解包后的应用时，先确保存在 `dist/win-unpacked/Glyph Studio.exe`，再运行 `node scripts/qa-packaged.cjs`。源码运行的更新流程只用于检查和打开下载页面，不会替换开发目录。
 
 代码结构、测试分层和安全边界见[架构说明](docs/architecture.md)与[开发指南](docs/development.md)。
 
@@ -112,6 +122,7 @@ package.json          依赖与构建配置
 - [架构说明](docs/architecture.md)：数据流、模块边界和本地处理与网络边界设计。
 - [开发指南](docs/development.md)：安装、测试、调试和打包。
 - [常见问题](docs/faq.md)：字体、限制、SmartScreen 和联网边界。
+- [1.3.0 发布说明](docs/release-1.3.0.md)：启动检查、校验后自更新、迁移提示和网络边界。
 - [1.2.0 发布说明](docs/release-1.2.0.md)：自动补正画面比例、排版间距和下载文件。
 - [发布流程](docs/releasing.md)：维护者可选的检查与 GitHub CLI 流程。
 - [1.1.1 发布说明](docs/release-1.1.1.md)：上一版本的手动检查更新、下载入口和网络边界。

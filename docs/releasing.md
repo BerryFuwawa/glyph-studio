@@ -26,7 +26,7 @@
 
    有解包目录时，再运行 `node scripts/qa-packaged.cjs`。`scripts/qa-browser.cjs` 自动寻找 Chrome；必要时设置 `CHROME_PATH`。
 
-5. 执行 `npm run build`，检查 `dist/` 中唯一的 Windows x64 portable exe，启动最终文件并验证四种模式、五种导出、剪贴板和离线行为。
+5. 执行 `npm run build`，检查 `dist/` 中唯一的 Windows x64 portable exe，启动最终文件并验证四种模式、五种导出、剪贴板和本地图像处理；在可联网环境验证启动更新检查、失败重试、更新确认、下载进度、取消下载以及 SHA-256 和文件大小校验。更新测试不得把源码目录或 Electron 运行时作为替换目标。
 6. 本地生成哈希并保存核对值：
 
    ```powershell

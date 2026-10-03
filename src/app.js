@@ -541,6 +541,80 @@
   function releaseHeldView() { if (heldView) { setView(heldView); heldView = null; } }
   document.addEventListener('keyup', event => { if (event.code === 'Space') releaseHeldView(); });
   window.addEventListener('blur', releaseHeldView);
+  let updateState = null;
+  let updateChecking = false;
+  let updateInstalling = false;
+  function setUpdateActions() {
+    const busy = updateChecking || updateInstalling;
+    for (const id of ['check-update-btn', 'startup-update-status', 'install-update-btn', 'download-update-btn', 'update-notice']) $(id).disabled = busy;
+    $('install-update-btn').hidden = updateState?.status !== 'available' || !updateState.canInstall;
+    $('download-update-btn').hidden = updateState?.status !== 'available';
+    $('update-notice').hidden = updateState?.status !== 'available' && !updateInstalling;
+    $('startup-update-status').hidden = updateState?.status === 'available' && !updateChecking;
+  }
+  async function runUpdateCheck() {
+    if (updateChecking || updateInstalling || !window.desktop?.checkForUpdates) return;
+    updateChecking = true;
+    $('check-update-btn').textContent = '检查中…';
+    $('startup-update-status').textContent = '自动检查更新…';
+    $('update-status').textContent = '正在连接 GitHub，请稍候…';
+    setUpdateActions();
+    try {
+      updateState = await window.desktop.checkForUpdates();
+      if (updateState.status === 'available') {
+        $('update-status').textContent = `发现新版本 ${updateState.latestVersion}，当前版本 ${updateState.currentVersion}。${updateState.canInstall ? '可下载并自动替换旧版。' : updateState.installReason || ''}`;
+        $('startup-update-status').textContent = `发现 ${updateState.latestVersion}`;
+        $('update-notice-text').textContent = '检测到更新，点击更新';
+      } else if (updateState.status === 'current') {
+        $('update-status').textContent = `当前版本 ${updateState.currentVersion} 已是最新版。`;
+        $('startup-update-status').textContent = '已是最新版';
+      } else {
+        $('update-status').textContent = updateState.message;
+        $('startup-update-status').textContent = '检查失败，点击重试';
+      }
+      if (updateState.previousUpdate?.status === 'success') notify('更新完成，欢迎继续创作');
+      if (updateState.previousUpdate?.status === 'error') notify(updateState.previousUpdate.message || '上次更新未完成，旧版已保留。', true);
+    } catch {
+      updateState = { status: 'error' };
+      $('update-status').textContent = '检查失败，请稍后重试。';
+      $('startup-update-status').textContent = '检查失败，点击重试';
+    } finally {
+      updateChecking = false;
+      $('check-update-btn').textContent = updateState?.status === 'error' ? '重新检查' : '检查更新';
+      setUpdateActions();
+    }
+  }
+  function showUpdateProgress(progress) {
+    const text = progress.phase === 'downloading' ? `正在下载更新 ${Math.max(0, Math.min(100, Math.round(progress.percent || 0)))}%`
+      : progress.phase === 'verifying' ? '正在校验更新…' : '正在替换旧版，即将重启…';
+    $('update-notice-text').textContent = text;
+    $('startup-update-status').textContent = text;
+    $('update-status').textContent = text;
+    $('cancel-update-btn').hidden = progress.phase !== 'downloading';
+    $('update-notice').hidden = false;
+  }
+  async function installUpdate() {
+    if (updateInstalling || updateChecking || updateState?.status !== 'available') return;
+    if (!updateState.canInstall) { $('help-dialog').showModal(); return; }
+    updateInstalling = true;
+    setUpdateActions();
+    try {
+      const outcome = await window.desktop.installUpdate();
+      if (outcome.status === 'installing') { showUpdateProgress({ phase: 'installing' }); return; }
+      if (outcome.status === 'canceled') {
+        $('update-status').textContent = '更新已取消，可在准备好后重试。';
+        $('startup-update-status').textContent = `发现 ${updateState.latestVersion}`;
+      }
+    } catch (error) {
+      $('update-status').textContent = (error.message || '').replace(/^Error invoking remote method '[^']+': (?:Error: )?/, '') || '更新失败，旧版已保留，请稍后重试。';
+      $('startup-update-status').textContent = '更新失败，可重试';
+      notify('更新未完成，旧版已保留。', true);
+    }
+    updateInstalling = false;
+    $('update-notice-text').textContent = '检测到更新，点击更新';
+    $('cancel-update-btn').hidden = true;
+    setUpdateActions();
+  }
   if (window.desktop?.getAppVersion) {
     window.desktop.getAppVersion().then(version => {
       $('app-version').textContent = `GLYPH STUDIO ${version}`;
@@ -549,25 +623,15 @@
   } else {
     $('check-update-btn').disabled = true;
     $('update-status').textContent = '请在桌面应用中检查更新。';
+    $('startup-update-status').hidden = true;
   }
-  $('check-update-btn').addEventListener('click', async () => {
-    const button = $('check-update-btn');
-    button.disabled = true;
-    button.textContent = '检查中…';
-    $('update-status').textContent = '正在连接 GitHub，请稍候…';
-    $('download-update-btn').hidden = true;
-    try {
-      const update = await window.desktop.checkForUpdates();
-      $('update-status').textContent = update.status === 'available'
-        ? `发现新版本 ${update.latestVersion}，当前版本 ${update.currentVersion}。`
-        : update.status === 'current' ? `当前版本 ${update.currentVersion} 已是最新版。` : update.message;
-      $('download-update-btn').hidden = update.status !== 'available';
-      button.textContent = update.status === 'error' ? '重新检查' : '检查更新';
-    } catch {
-      $('update-status').textContent = '检查失败，请稍后重试。';
-      button.textContent = '重新检查';
-    } finally { button.disabled = false; }
-  });
+  $('check-update-btn').addEventListener('click', runUpdateCheck);
+  $('startup-update-status').addEventListener('click', runUpdateCheck);
+  $('update-notice').addEventListener('click', installUpdate);
+  $('install-update-btn').addEventListener('click', installUpdate);
+  $('cancel-update-btn').addEventListener('click', async () => { $('cancel-update-btn').disabled = true; try { await window.desktop.cancelUpdate(); } finally { $('cancel-update-btn').disabled = false; } });
+  window.desktop?.onUpdateProgress?.(showUpdateProgress);
+  if (window.desktop?.checkForUpdates) setTimeout(runUpdateCheck, 500);
   $('download-update-btn').addEventListener('click', async () => {
     try { await window.desktop.openUpdatePage(); }
     catch { $('update-status').textContent = '无法打开浏览器，请重新检查后重试。'; }

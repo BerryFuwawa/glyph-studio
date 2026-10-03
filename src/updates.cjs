@@ -193,6 +193,17 @@ function availableResult(currentVersion, latestVersion, releaseUrl) {
   };
 }
 
+function selectPortableAsset(release) {
+  if (!isStableTag(release?.tag_name) || !Array.isArray(release.assets)) return null;
+  const name = `Glyph-Studio-${release.tag_name.slice(1)}-Windows-x64.exe`;
+  const url = `https://github.com/BerryFuwawa/glyph-studio/releases/download/${release.tag_name}/${name}`;
+  const matches = release.assets.filter(asset => asset.name === name);
+  if (matches.length !== 1) return null;
+  const asset = matches[0];
+  if (asset.state !== 'uploaded' || asset.browser_download_url !== url || !Number.isSafeInteger(asset.size) || asset.size < 2 || asset.size > 250 * 1024 * 1024 || !/^sha256:[a-f0-9]{64}$/i.test(asset.digest || '')) return null;
+  return { name, url, size: asset.size, sha256: asset.digest.slice(7).toLowerCase() };
+}
+
 function errorResult(currentVersion, message) {
   return { status: 'error', currentVersion, message };
 }
@@ -260,7 +271,7 @@ function createUpdateChecker({ currentVersion, fetchImpl, timeoutMs = DEFAULT_TI
         const releaseUrl = releaseUrlForTag(latestVersion);
         if (!latest || !releaseUrl) return errorResult(currentVersion, 'GitHub 返回的版本信息无效。');
         return compareVersions(latest, version) > 0
-          ? availableResult(currentVersion, latestVersion, releaseUrl)
+          ? { ...availableResult(currentVersion, latestVersion, releaseUrl), asset: selectPortableAsset(release) }
           : currentResult(currentVersion, latestVersion, releaseUrl);
       })();
 
@@ -303,3 +314,4 @@ module.exports.parseVersion = parseVersion;
 module.exports.compareVersions = compareVersions;
 module.exports.isStableTag = isStableTag;
 module.exports.releaseUrlForTag = releaseUrlForTag;
+module.exports.selectPortableAsset = selectPortableAsset;
