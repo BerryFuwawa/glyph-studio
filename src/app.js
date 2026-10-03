@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   const $ = id => document.getElementById(id);
-  const defaults = { mode: 'ascii', columns: 120, brightness: 0, contrast: 1, gamma: 1, threshold: 0.5, lineSpacing: 0, characterSpacing: 0, autoContrast: true, dither: false, invert: false, ramp: ' .:-=+*#%@', color: 'mono', palette: 'ivory' };
+  const defaults = { mode: 'ascii', columns: 120, brightness: 0, contrast: 1, gamma: 1, threshold: 0.5, lineSpacing: 0, characterSpacing: 0, preserveAspect: true, autoContrast: true, dither: false, invert: false, ramp: ' .:-=+*#%@', color: 'mono', palette: 'ivory' };
   const modeNames = { ascii: ['经典 ASCII', 'ASCII', '10 级明暗'], braille: ['盲文点阵', 'BRAILLE', '每格 8 个点'], edges: ['轮廓线稿', 'CONTOUR', '方向边缘'], blocks: ['像素方块', 'BLOCKS', '5 级像素'] };
   let settings = { ...defaults };
   try {
@@ -80,6 +80,7 @@
     scheduleRender(0);
   }
   function updateControls() {
+    $('preserveAspect').checked = settings.preserveAspect;
     for (const id of ['columns', 'brightness', 'contrast', 'gamma', 'threshold', 'lineSpacing', 'characterSpacing']) {
       $(id).value = settings[id];
       updateRange(id);
@@ -135,6 +136,10 @@
     renderTimer = setTimeout(() => {
       const paper = snapshot.color === 'mono' && snapshot.palette === 'paper';
       const options = { ...snapshot, charAspect: 0.5, invert: snapshot.invert !== paper, background: paper ? [242, 242, 238] : [12, 15, 18] };
+      if (snapshot.preserveAspect) {
+        const glyphWidth = measureGlyphWidth(14);
+        options.layout = { glyphWidth, glyphHeight: glyphWidth * 2, lineSpacing: snapshot.lineSpacing, characterSpacing: snapshot.characterSpacing };
+      }
       if (snapshot.mode !== 'ascii') delete options.ramp;
       pendingJob = { type: 'convert', id, options };
       jobSettings.set(id, snapshot);
@@ -306,10 +311,13 @@
     } catch (error) { notify(error.message, true); }
   }
 
-  function calculateMetrics(output, fontSize = 14, padding = 28) {
+  function measureGlyphWidth(fontSize) {
     const measure = document.createElement('canvas').getContext('2d');
     measure.font = `${fontSize}px "Cascadia Mono", "Consolas", "DejaVu Sans Mono", monospace`;
-    let glyphWidth = measure.measureText('M').width;
+    return measure.measureText('M').width;
+  }
+  function calculateMetrics(output, fontSize = 14, padding = 28) {
+    let glyphWidth = measureGlyphWidth(fontSize);
     let characterSpacing = renderedSettings.characterSpacing;
     let lineSpacing = renderedSettings.lineSpacing;
     let cellWidth = glyphWidth + characterSpacing;
@@ -444,13 +452,14 @@
     $(id).addEventListener('input', () => {
       settings[id] = Number($(id).value);
       updateRange(id);
-      if (['lineSpacing', 'characterSpacing'].includes(id) && currentReady()) {
+      if (['lineSpacing', 'characterSpacing'].includes(id) && !settings.preserveAspect && currentReady()) {
         renderedSettings = { ...renderedSettings, [id]: settings[id] };
         drawResult();
       } else scheduleRender();
     });
     $(id).addEventListener('change', commitHistory);
   }
+  $('preserveAspect').addEventListener('change', () => setSettings({ preserveAspect: $('preserveAspect').checked }));
   for (const [id, key] of [['auto-contrast', 'autoContrast'], ['dither', 'dither'], ['invert', 'invert']]) $(id).addEventListener('change', () => setSettings({ [key]: $(id).checked }));
   $('ramp').addEventListener('input', () => { settings.ramp = $('ramp').value; $('style-label').textContent = `${Array.from(settings.ramp).length} 级明暗`; scheduleRender(140); });
   $('ramp').addEventListener('change', () => { if (validateRamp()) commitHistory(); });

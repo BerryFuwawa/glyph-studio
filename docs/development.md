@@ -65,7 +65,7 @@ node scripts/qa-browser.cjs
 node scripts/qa-spacing.cjs
 ```
 
-覆盖滑块与画布尺寸、PNG 尺寸、TXT/ANSI 字符不变、参数记忆、撤销重做、模式切换和旧设置兼容。
+覆盖滑块与画布尺寸、PNG 尺寸、TXT/ANSI 不编码像素间距、参数记忆、撤销重做、模式切换和旧设置兼容。
 
 ```powershell
 npm run build

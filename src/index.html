@@ -82,7 +82,8 @@
         <div class="section-heading"><h2>排版间距</h2><span class="help-label">额外留白</span></div>
         <div class="range-control"><div class="range-label"><label for="lineSpacing">行间距</label><output id="lineSpacing-out">0 px</output></div><input type="range" id="lineSpacing" min="0" max="24" step="1" value="0" aria-describedby="spacing-hint"></div>
         <div class="range-control"><div class="range-label"><label for="characterSpacing">字符间距</label><output id="characterSpacing-out">0 px</output></div><input type="range" id="characterSpacing" min="0" max="12" step="1" value="0" aria-describedby="spacing-hint"></div>
-        <p id="spacing-hint" class="field-hint">0 保持默认排版；图片、SVG 和 HTML 导出保留间距。</p>
+        <label class="switch-row" for="preserveAspect"><span>自动补正画面比例</span><input id="preserveAspect" type="checkbox" checked aria-describedby="spacing-hint"><span class="switch-track" aria-hidden="true"></span></label>
+        <p id="spacing-hint" class="field-hint">开启后随间距重新采样字符行数，保持原图比例。图片、SVG 和 HTML 导出保留间距。</p>
       </section>
 
       <section class="control-section color-section">
@@ -138,7 +139,7 @@
     </section>
   </main>
 
-  <footer class="statusbar"><div><span class="status-indicator"></span><span id="status-text">正在加载示例图片</span></div><div><span id="status-font">等宽字符 / UTF-8</span><span class="status-divider">|</span><span id="app-version">GLYPH STUDIO 1.1.1</span></div></footer>
+  <footer class="statusbar"><div><span class="status-indicator"></span><span id="status-text">正在加载示例图片</span></div><div><span id="status-font">等宽字符 / UTF-8</span><span class="status-divider">|</span><span id="app-version">GLYPH STUDIO 1.2.0</span></div></footer>
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
   <dialog id="export-dialog" class="modal export-modal">
@@ -162,7 +163,7 @@
     <div class="help-note"><svg class="icon"><use href="#i-lock"/></svg><p>图片转换无需联网，所有图片都在本机处理。仅手动检查软件更新时联网。动图仅转换第一帧；单次处理一张图片。字符画适合用等宽字体查看，盲文点阵需要支持 Unicode 的字体。</p></div>
     <details class="reference-details"><summary>开源参考与实现说明</summary><p>参考 ascii-image-converter 的点阵与导出体验、aalib.js 的处理流水线，以及 Chafa 的字体比例与抖动思路。转换核心为独立实现，未复制这些项目的代码。</p><p class="reference-url">github.com/TheZoraiz/ascii-image-converter<br>github.com/mir3z/aalib.js<br>github.com/hpjansson/chafa</p></details>
     <section class="update-section" aria-label="软件更新">
-      <div class="update-heading"><strong>软件更新 <span id="help-version" class="version-note">1.1.1</span></strong><button id="check-update-btn" class="button secondary compact">检查更新</button></div>
+      <div class="update-heading"><strong>软件更新 <span id="help-version" class="version-note">1.2.0</span></strong><button id="check-update-btn" class="button secondary compact">检查更新</button></div>
       <p id="update-status" role="status" aria-live="polite">点击检查 GitHub 最新正式版。</p>
       <p class="field-hint">仅查询版本信息，图片不会上传。下载后手动替换程序。</p>
       <button id="download-update-btn" class="button primary compact" hidden>前往下载</button>

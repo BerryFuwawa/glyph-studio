@@ -156,6 +156,12 @@
     return {
       columns: integerOption(source.columns, 120, 24, 320),
       charAspect: numberOption(source.charAspect, 0.5, 0.05, 8),
+      layout: source.layout && typeof source.layout === 'object' ? {
+        glyphWidth: numberOption(source.layout.glyphWidth, 8, 1, 128),
+        glyphHeight: numberOption(source.layout.glyphHeight, 16, 1, 256),
+        characterSpacing: numberOption(source.layout.characterSpacing, 0, 0, 64),
+        lineSpacing: numberOption(source.layout.lineSpacing, 0, 0, 64)
+      } : null,
       mode: mode,
       ramp: ramp,
       hasRamp: hasRamp,
@@ -246,7 +252,14 @@
   function outputDimensions(width, height, options) {
     var columns = options.columns;
     var ratio = (height / width) * options.charAspect;
-    var rows = Math.max(1, Math.round(columns * ratio));
+    function rowsForColumns(count) {
+      if (!options.layout) return Math.max(1, Math.round(count * ratio));
+      var layout = options.layout;
+      // No trailing gap: match the rendered content box, excluding canvas padding.
+      var contentWidth = count * layout.glyphWidth + (count - 1) * layout.characterSpacing;
+      return Math.max(1, Math.round((contentWidth * height / width + layout.lineSpacing) / (layout.glyphHeight + layout.lineSpacing)));
+    }
+    var rows = rowsForColumns(columns);
     if (rows > MAX_ROWS || columns * rows > MAX_CELLS) {
       var scale = 1;
       if (rows > MAX_ROWS) scale = Math.min(scale, MAX_ROWS / rows);
@@ -254,15 +267,15 @@
         scale = Math.min(scale, Math.sqrt(MAX_CELLS / (columns * rows)));
       }
       columns = Math.max(1, Math.round(columns * scale));
-      rows = Math.max(1, Math.round(columns * ratio));
+      rows = rowsForColumns(columns);
     }
     while (rows > MAX_ROWS && columns > 1) {
       columns -= 1;
-      rows = Math.max(1, Math.round(columns * ratio));
+      rows = rowsForColumns(columns);
     }
     while (columns * rows > MAX_CELLS && columns > 1) {
       columns -= 1;
-      rows = Math.max(1, Math.round(columns * ratio));
+      rows = rowsForColumns(columns);
     }
     if (rows > MAX_ROWS) rows = MAX_ROWS;
     if (columns * rows > MAX_CELLS) {

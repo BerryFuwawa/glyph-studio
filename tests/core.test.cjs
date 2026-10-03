@@ -109,3 +109,26 @@ test('edge mode emits directional glyphs and keeps the requested mode', () => {
   assert.equal(result.mode, 'edges');
   assert.match(result.text, /\|/);
 });
+
+test('spacing correction resamples rows to preserve the physical picture aspect', () => {
+  for (const mode of ['ascii', 'braille', 'edges', 'blocks']) {
+    for (const [width, height] of [[100, 100], [160, 80], [80, 160]]) {
+      const layout = { glyphWidth: 8, glyphHeight: 16, characterSpacing: 4, lineSpacing: 12 };
+      const output = AsciiCore.convert(image(width, height), { columns: 120, mode, layout });
+      const physicalWidth = output.columns * 8 + (output.columns - 1) * 4;
+      const physicalHeight = output.rows * 16 + (output.rows - 1) * 12;
+      assert.ok(Math.abs(physicalHeight - physicalWidth * height / width) <= 14, `${mode}: stretched grid`);
+      assert.equal(output.text.split('\n').length, output.rows);
+    }
+  }
+});
+
+test('spacing-corrected extreme portrait grids respect limits and retain aspect', () => {
+  const layout = { glyphWidth: 8, glyphHeight: 16, characterSpacing: 12, lineSpacing: 0 };
+  const output = AsciiCore.convert(image(40, 1600), { columns: 280, layout });
+  assert.ok(output.rows <= 600 && output.columns * output.rows <= 180000);
+  assert.ok(output.columns < 280);
+  const w = output.columns * 8 + (output.columns - 1) * 12;
+  const h = output.rows * 16;
+  assert.ok(Math.abs(h - w * 40) <= 8);
+});

@@ -11,6 +11,7 @@
 @media(max-height:780px){.app-header{height:76px}.workspace{padding-top:17px}.controls{padding-top:17px}.workspace-toolbar{margin-bottom:13px}.canvas-toolbar{margin:9px 0}.output-strip{height:43px}.control-section{margin-bottom:18px;padding-bottom:18px}.sidebar-title{margin-bottom:15px}.source-section{margin-bottom:20px}.style-card{padding:9px 10px 8px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 /* Update checks are explicit and do not interrupt the studio. */
+.palette-swatch { padding: 0; flex: 0 0 25px; appearance: none; }
 .update-section { border-top: 1px solid var(--border, #303438); margin-top: 16px; padding-top: 16px; }
 .update-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .update-section p { font-size: 12px; line-height: 1.6; margin: 10px 0; }
